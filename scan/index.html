@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>扫源工具-直播源扫描</title>
+     <!-- 圆形Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='%23ff9800'/><circle cx='32' cy='32' r='14' fill='none' stroke='white' stroke-width='3'/><circle cx='32' cy='32' r='6' fill='white'/><path d='M32 18v28M18 32h28' stroke='white' stroke-width='2'/></svg>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><span class="title-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; background-color: #ff9800; border-radius: 50%; margin-right: 10px;">
+                    <i class="fas fa-satellite-dish" style="color: white; font-size: 1.2rem;"></i>
+                </span>直播源扫描工具</h1>
+            <p class="subtitle">支持模板变量扫描 | SOCKS5代理 | php版</p>
+        </header>
+        
+        <div class="main-content">
+            <!-- 左侧：扫描配置 -->
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="fas fa-sliders-h"></i>
+                    <h2>扫描配置</h2>
+                </div>
+                
+                <div class="form-group">
+                    <label for="scan-template">扫描模板</label>
+                    <textarea id="scan-template" rows="4" placeholder="例如：
+http://192.168.[1-10]/live/[001-100]/index.m3u8
+http://127.0.0.[202-206]/ccav[9-15]/live[00001-00006]/index.m3u8
+支持多个变量：变量1-变量2-变量3"></textarea>
+                    <div class="info-message">
+                        <i class="fas fa-info-circle"></i>格式说明：[起始值-结束值] 表示变量范围，可补零，例如 [001-100]
+                    </div>
+                </div>
+                
+                <div class="compact-group">
+                    <div class="compact-group-title" id="scan-params-toggle">
+                        <div>
+                            <i class="fas fa-cogs"></i>
+                            扫描参数
+                        </div>
+                        <i class="fas fa-chevron-down compact-group-arrow"></i>
+                    </div>
+                    
+                    <div class="compact-group-content" id="scan-params-content">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="concurrent">并发数</label>
+                                <input type="number" id="concurrent" value="3" min="1" max="10">
+                            </div>
+                            <div class="form-group">
+                                <label for="timeout">超时（s）</label>
+                                <input type="number" id="timeout" value="5" min="1" max="30">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="retry-count">重试次数</label>
+                                <input type="number" id="retry-count" value="1" min="0" max="3">
+                            </div>
+                            <div class="form-group">
+                                <label for="delay">请求间隔(ms)</label>
+                                <input type="number" id="delay" value="200" min="0" max="2000">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="auto-save" checked> 自动保存设置
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="compact-group">
+                    <div class="compact-group-title" id="proxy-toggle">
+                        <div>
+                            <i class="fas fa-globe"></i>
+                            代理设置
+                        </div>
+                        <i class="fas fa-chevron-down compact-group-arrow"></i>
+                    </div>
+                    
+                    <div class="compact-group-content" id="proxy-content">
+                        <div class="form-group">
+                            <label for="proxy-address">SOCKS5 地址</label>
+                            <input type="text" id="proxy-address" placeholder="例如: 127.0.0.1:1080（留空则不使用代理）">
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="proxy-username">用户名（可选）</label>
+                                <input type="text" id="proxy-username" placeholder="请输入用户名">
+                            </div>
+                            <div class="form-group">
+                                <label for="proxy-password">密码（可选）</label>
+                                <div class="password-input-group">
+                                    <input type="password" id="proxy-password" placeholder="请输入密码">
+                                    <button type="button" class="toggle-password-btn" id="toggle-password">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="compact-group">
+    <div class="compact-group-title" id="headers-toggle">
+        <div>
+            <i class="fas fa-heading"></i>
+            自定义请求头
+        </div>
+        <i class="fas fa-chevron-down compact-group-arrow"></i>
+    </div>
+    
+    <div class="compact-group-content" id="headers-content">
+        <!-- User-Agent和Referer并排放置 -->
+        <div class="form-row">
+            <div class="form-group">
+                <label for="user-agent">User-Agent</label>
+                <input type="text" id="user-agent" value="Okhttp/3.15" placeholder="例如: Mozilla/5.0...">
+            </div>
+            
+            <div class="form-group">
+                <label for="referer">Referer</label>
+                <input type="text" id="referer" placeholder="http://example.com/">
+            </div>
+        </div>
+        
+        <!-- Hosts单独一行，多行输入 -->
+        <div class="form-group">
+            <label for="host">Hosts</label>
+            <textarea id="host" rows="3" placeholder="1.2.3.4 example.com&#10;api.example.com 192.168.1.100&#10;# 支持注释"></textarea>
+
+        </div>
+        
+        <!-- 其他请求头 -->
+        <div class="form-group">
+            <label for="other-headers">其他请求头</label>
+            <textarea id="other-headers" rows="3" placeholder="Accept: */*&#10;Accept-Language: zh-CN,zh;q=0.9&#10;Cache-Control: no-cache"></textarea>
+
+        </div>
+    </div>
+</div>
+                
+                <div class="buttons scan-controls">
+                    <button id="start-btn" class="btn">
+                        <i class="fas fa-play"></i> 开始扫描
+                    </button>
+                    <button id="pause-btn" class="btn btn-warning" disabled>
+                        <i class="fas fa-pause"></i> 暂停
+                    </button>
+                    <button id="stop-btn" class="btn btn-danger" disabled>
+                        <i class="fas fa-stop"></i> 停止
+                    </button>
+                    <button id="export-btn" class="btn btn-success" disabled>
+                        <i class="fas fa-download"></i> 导出结果
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 右侧：扫描结果 -->
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="fas fa-chart-bar"></i>
+                    <h2>扫描结果</h2>
+                    <div style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
+                        <span id="scan-status" class="status-badge status-info">就绪</span>
+                        <span id="scan-progress">0/0</span>
+                    </div>
+                </div>
+                
+                <div class="response-info">
+                    <div class="response-info-item">
+                        <span class="response-info-label">总进度:</span>
+                        <span id="total-progress" class="response-info-value">0%</span>
+                    </div>
+                    <div class="response-info-item">
+                        <span class="response-info-label">有效源:</span>
+                        <span id="valid-count" class="response-info-value" style="color: var(--secondary-color);">0</span>
+                    </div>
+                    <div class="response-info-item">
+                        <span class="response-info-label">超时源:</span>
+                        <span id="timeout-count" class="response-info-value" style="color: var(--warning-color);">0</span>
+                    </div>
+                    <div class="response-info-item">
+                        <span class="response-info-label">无效源:</span>
+                        <span id="invalid-count" class="response-info-value" style="color: var(--error-color);">0</span>
+                    </div>
+                    <div class="response-info-item">
+                        <span class="response-info-label">速度:</span>
+                        <span id="scan-speed" class="response-info-value">0个/秒</span>
+                    </div>
+                </div>
+                
+                <div class="progress-container">
+                    <div id="progress-bar" class="progress-bar"></div>
+                </div>
+                
+                <!-- 标签页顺序：全部结果在最左边 -->
+                <div class="tabs">
+                    <div class="tab active" data-tab="all">
+                        <i class="fas fa-list"></i> 全部结果
+                        <span class="stat-badge" id="all-badge">0</span>
+                    </div>
+                    <div class="tab" data-tab="valid">
+                        <i class="fas fa-check-circle"></i> 有效源
+                        <span class="stat-badge" id="valid-badge">0</span>
+                    </div>
+                    <div class="tab" data-tab="timeout">
+                        <i class="fas fa-clock"></i> 超时源
+                        <span class="stat-badge" id="timeout-badge">0</span>
+                    </div>
+                    <div class="tab" data-tab="invalid">
+                        <i class="fas fa-times-circle"></i> 无效源
+                        <span class="stat-badge" id="invalid-badge">0</span>
+                    </div>
+                </div>
+                
+                <!-- 全部结果 -->
+                <div id="all-tab" class="tab-content active">
+                    <div class="pre-container">
+                        <div id="all-list" class="results-list">
+                            <div class="no-results">
+                                <i class="fas fa-list"></i>
+                                <p>暂无扫描结果</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 有效源 -->
+                <div id="valid-tab" class="tab-content">
+                    <div class="pre-container">
+                        <div id="valid-list" class="results-list">
+                            <div class="no-results">
+                                <i class="fas fa-check-circle"></i>
+                                <p>暂无有效直播源</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 超时源 -->
+                <div id="timeout-tab" class="tab-content">
+                    <div class="pre-container">
+                        <div id="timeout-list" class="results-list">
+                            <div class="no-results">
+                                <i class="fas fa-clock"></i>
+                                <p>暂无超时直播源</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 无效源 -->
+                <div id="invalid-tab" class="tab-content">
+                    <div class="pre-container">
+                        <div id="invalid-list" class="results-list">
+                            <div class="no-results">
+                                <i class="fas fa-times-circle"></i>
+                                <p>暂无无效直播源</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+<!-- 扫描状态提示 -->
+<div id="scan-info">
+    <div id="scan-info-header">
+        <div id="scan-info-title">
+            <i class="fas fa-info-circle"></i> 扫描信息
+        </div>
+        <button id="clear-results-btn">
+            <i class="fas fa-trash-alt"></i> 清空结果
+        </button>
+    </div>
+    <div id="scan-details">
+        等待开始扫描...
+    </div>
+</div>
+            </div>
+        </div>
+        
+        <!-- 新增：扫描记录面板 -->
+        <div class="panel scan-history-panel">
+            <div class="panel-title">
+                <i class="fas fa-history"></i>
+                <h2>扫描记录</h2>
+                <div style="margin-left: auto;">
+                    <button id="clear-history-btn" class="btn-clear">
+                        <i class="fas fa-trash-alt"></i>清空记录
+                    </button>
+                </div>
+            </div>
+            <div id="scan-history-list" class="history-container">
+                <div class="no-results">
+                    <i class="fas fa-history"></i>
+                    <p>暂无扫描记录</p>
+                    <small>扫描完成后将保存记录</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="panel log-panel">
+            <div class="panel-title">
+                <i class="fas fa-file-alt"></i>
+                <h2>扫描日志</h2>
+                <div style="margin-left: auto;">
+                    <button id="clear-log-btn" class="btn-clear">
+                        <i class="fas fa-trash-alt"></i>清空日志
+                    </button>
+                </div>
+            </div>
+            <div id="log-container">
+                <div class="log-item">
+                    <span class="log-time">[系统]</span>
+                    <span class="log-message info">扫描工具已就绪，请输入模板开始扫描</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>直播源扫描工具 © 2025 | 支持模板变量扫描 | SOCKS5代理</p>
+            <p style="margin-top: 5px; font-size: 12px;">请遵守相关法律法规，仅用于合法测试</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
