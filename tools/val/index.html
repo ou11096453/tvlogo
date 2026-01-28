@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>直播源有效性验证工具</title>
+    <!-- Favicon (使用内嵌SVG) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='%234caf50'/><path d='M32 14c6.6 0 12 5.4 12 12v6c0 8-4 14.2-10 16.8V46c0 2.2-1.8 4-4 4s-4-1.8-4-4v-3.2C24 46.2 20 40 20 32v-6c0-6.6 5.4-12 12-12z' fill='white'/></svg>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>
+                <span class="title-icon">
+                    <i class="fas fa-broadcast-tower"></i>
+                </span> 直播源有效性验证工具
+            </h1>
+            <p class="subtitle">支持SOCKS5代理、批量测试、频道名分组、TXT导入及测试报告导出</p>
+        </header>
+        
+        <div class="main-content">
+            <!-- 左侧配置面板 -->
+            <div class="panel left-panel">
+                <div class="panel-title">
+                    <i class="fas fa-list-ol"></i>
+                    <h2>频道配置</h2>
+                </div>
+                
+                <div class="form-group">
+                    <label for="batch-urls">频道列表</label>
+                    <textarea id="batch-urls" rows="8" class="batch-textarea" placeholder="#支持 #genre# 分组、频道名格式
+央视,#genre#
+CCTV1,http://tvgslb.hn.chinamobile.com:8089/180000001002/00000001000000000007000000001243/main.m3u8
+
+# 也支持纯URL格式（没有频道名）
+http://tvgslb.hn.chinamobile.com:8089/180000001002/00000001000000000002000000113182/main.m3u8"></textarea>
+                    <p class="input-tip">支持txt直播源列表格式。系统将测试每个URL的状态码，并对状态码200的M3U8文件进行内容验证。</p>
+                </div>
+                
+                <div class="batch-controls">
+                    <label class="btn btn-primary">
+                        <i class="fas fa-folder-open"></i> 导入TXT列表
+                        <input type="file" id="import-txt-file" accept=".txt,text/plain" style="display: none;">
+                    </label>
+                    
+                    <button id="load-example-urls" class="btn btn-success">
+                        <i class="fas fa-file-import"></i> 加载示例
+                    </button>
+                    
+                    <button id="clear-urls" class="btn btn-warning">
+                        <i class="fas fa-trash-alt"></i> 清空
+                    </button>
+                    
+                    <div id="url-count" class="count-badge">频道: 0</div>
+                </div>
+                
+                <!-- 折叠配置区域 -->
+                <div class="compact-group">
+                    <div class="compact-group-title" id="proxy-toggle">
+                        <div>
+                            <i class="fas fa-globe"></i>
+                            代理设置
+                        </div>
+                        <i class="fas fa-chevron-down compact-group-arrow"></i>
+                    </div>
+                    
+                    <div class="compact-group-content" id="proxy-content">
+                        <div class="form-group">
+                            <label for="proxy">SOCKS5代理地址</label>
+                            <input type="text" id="proxy" placeholder="例如: 127.0.0.1:1080（留空则不使用代理）">
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="proxy-username">用户名（可选）</label>
+                                <input type="text" id="proxy-username" placeholder="用户名">
+                            </div>
+                            <div class="form-group">
+                                <label for="proxy-password">密码（可选）</label>
+                                <div class="password-input-group">
+                                    <input type="password" id="proxy-password" placeholder="密码">
+                                    <button type="button" class="toggle-password-btn" id="toggle-password">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                        
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="test-proxy-first" checked>
+                            <label for="test-proxy-first">先测试代理连通性（确保代理可用）</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="compact-group">
+                    <div class="compact-group-title" id="request-toggle">
+                        <div>
+                            <i class="fas fa-sliders-h"></i>
+                            请求配置
+                        </div>
+                        <i class="fas fa-chevron-down compact-group-arrow"></i>
+                    </div>
+                    
+                    <div class="compact-group-content" id="request-content">
+                        <div class="form-group">
+                            <label for="custom-ua">User-Agent</label>
+                            <div class="input-row">
+                                <div class="form-group" style="flex: 2;">
+                                    <input type="text" id="custom-ua" placeholder="输入自定义UA或选择预置UA">
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <select id="ua-preset" class="ua-preset">
+                                        <option value="">选择预置UA</option>
+                                        <option value="okhttp/3.15">okhttp/3.15</option>
+                                        <option value="Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1">Safari (iPhone)</option>
+                                        <option value="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/118.0">Firefox (Windows)</option>
+                                        <option value="Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Mobile Safari/537.36">Chrome (Android)</option>
+                                        <option value="VLC/3.0.18 LibVLC/3.0.18">VLC播放器</option>
+                                        <option value="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36">Chrome (Windows)</option>
+                                        <option value="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Safari/605.1.15">Safari (Mac)</option>
+                                        <option value="Kodi/20.2 (Windows NT 10.0; Win64; x64) App_Bitness/64 Version/20.2-Git:20230521-7a5e4c5">Kodi播放器</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                         <!-- 修改这里：将Referer和请求超时包裹在form-row中 -->
+    <div class="form-row">
+        <div class="form-group" style="flex: 2;">
+            <label for="custom-referer">Referer</label>
+            <input type="text" id="custom-referer" placeholder="例如: https://example.com/">
+        </div>
+        <div class="form-group" style="flex: 1;">
+            <label for="timeout">请求超时（秒）</label>
+            <input type="number" id="timeout" value="8" min="1" max="30">
+        </div>
+    </div>
+                        <!-- 新增：Hosts列表配置 -->
+    <div class="form-group">
+        <label for="hosts-list">Hosts列表</label>
+        <textarea id="hosts-list" rows="3" class="batch-textarea" placeholder="# 自定义域名解析
+# 格式：IP地址 域名
+127.0.0.1 example.com
+192.168.1.100 live.test.com"></textarea>
+        
+    </div>
+    
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="stop-on-first-failure" checked>
+                            <label for="stop-on-first-failure">遇到第一个失败时停止（代理连接失败时）</label>
+                        </div>
+                        
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="test-only-m3u8" checked>
+                            <label for="test-only-m3u8">仅测试M3U8文件（跳过非M3U8 URL）</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 修改：开始测试按钮占满一行 -->
+                <div class="buttons">
+                    <button id="batch-test-btn" class="btn btn-primary full-width">
+                        <i class="fas fa-play-circle"></i> 开始测试
+                    </button>
+                    <button id="stop-batch-test" class="btn btn-danger full-width" style="display: none;">
+                        <i class="fas fa-stop-circle"></i> 停止测试
+                    </button>
+                </div>
+                
+                <div class="progress-bar">
+                    <div id="progress-fill" class="progress-fill"></div>
+                </div>
+            </div>
+            
+            <!-- 右侧结果面板 -->
+            <div class="panel right-panel">
+                <div class="panel-title">
+                    <i class="fas fa-chart-bar"></i>
+                    <h2>测试结果</h2>
+                </div>
+                
+                <div class="loading" id="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>正在测试中，请稍候...</p>
+                </div>
+                
+                <div id="response-container">
+                    <div class="batch-stats">
+                        <div class="stat-item">
+                            <div id="total-urls-stat" class="stat-value">0</div>
+                            <div class="stat-label">总频道数</div>
+                        </div>
+                        <div class="stat-item">
+                            <div id="completed-urls-stat" class="stat-value">0</div>
+                            <div class="stat-label">已完成</div>
+                        </div>
+                        <div class="stat-item">
+                            <div id="success-urls-stat" class="stat-value">0</div>
+                            <div class="stat-label">成功</div>
+                        </div>
+                        <div class="stat-item">
+                            <div id="failed-urls-stat" class="stat-value">0</div>
+                            <div class="stat-label">失败</div>
+                        </div>
+                        <div class="stat-item">
+                            <div id="valid-m3u8-stat" class="stat-value">0</div>
+                            <div class="stat-label">有效M3U8</div>
+                        </div>
+                        <div class="stat-item">
+                            <div id="success-rate-stat" class="stat-value">0%</div>
+                            <div class="stat-label">成功率</div>
+                        </div>
+                    </div>
+
+                    <div class="batch-results">
+                        <table id="batch-result-table" class="batch-result-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>频道名称</th>
+                                    <th>状态码</th>
+                                    <th>响应时间</th>
+                                </tr>
+                            </thead>
+                            <tbody id="batch-result-body">
+                                <tr>
+                                    <td colspan="4" style="text-align: center; padding: 20px; color: #94a3b8;">
+                                        尚未开始测试，请配置频道并点击"开始测试"按钮
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="batch-actions">
+                        <button id="export-valid-report-btn" class="btn btn-success">
+                            <i class="fas fa-file-alt"></i> 导出测试报告
+                        </button>
+                        <button id="clear-results-btn" class="btn btn-error">
+                            <i class="fas fa-trash-alt"></i> 清除结果
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 底部面板区域 -->
+        <div class="bottom-panels">
+            <!-- 左侧底部：测试记录 -->
+            <div class="panel bottom-left">
+                <div class="panel-title">
+        <i class="fas fa-history"></i>
+        <h2>测试记录</h2>
+        <div class="panel-header-actions">
+            <div id="records-count" class="count-badge">记录: 0/20</div>
+            <button id="clear-records-btn" class="btn-icon btn-warning" title="清除记录">
+                <i class="fas fa-trash-alt"></i>清除记录
+            </button>
+        </div>
+    </div>
+                    
+                    <div class="records-list" id="records-list">
+                        <div class="record-empty">
+                            <i class="fas fa-history"></i>
+                            <p>暂无测试记录</p>
+                            <p style="font-size: 0.8rem; margin-top: 5px;">完成测试后将自动保存记录</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 右侧底部：测试日志 -->
+            <div class="panel bottom-right">
+                <div class="panel-title">
+        <i class="fas fa-clipboard-list"></i>
+        <h2>测试日志</h2>
+        <div class="panel-header-actions">
+            <button id="clear-log-btn" class="btn-icon btn-warning" title="清除日志">
+                <i class="fas fa-trash-alt"></i>清除日志
+            </button>
+        </div>
+    </div>
+                <div id="log-box" class="log-box">
+                    
+                </div>
+            </div>
+            
+            
+        </div>
+        
+        <footer>
+            <p>SOCKS5代理直播源测试工具 &copy; 2025 | 支持直连/代理模式、频道名、分组、TXT导入及测试报告导出</p>
+            <p style="margin-top: 5px; font-size: 0.8rem;">需要PHP 7.0+ 和 cURL、sockets扩展支持</p>
+        </footer>
+    
+    
+    <script src="script.js"></script>
+</body>
+</html>
