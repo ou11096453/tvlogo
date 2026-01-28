@@ -1,4 +1,4 @@
-# 📺 TV过来人 小站
+# 📺 TV网络志 小站
 
 [![站点状态](https://img.shields.io/website?down_message=Down&up_message=Online&url=https%3A%2F%2Flive.404003.xyz)](https://live.404003.xyz)
 [![关注公众号](https://img.shields.io/badge/%E5%85%B3%E6%B3%A8-WX%E5%85%AC%E4%BC%97%E5%8F%B7-brightgreen.svg)](https://live.404003.xyz/LOGO/wlz.jpg)
@@ -72,7 +72,7 @@
 
 ### 📣 获取更多资源与技术分享
 
-欢迎关注我的微信公众号 **【网络志】**，不错过任何实用网络资源与最新技术分享！
+欢迎关注我的公众号 **【网络志】**，不错过任何实用网络资源与最新技术分享！
 
 ![微信公众号二维码](LOGO/wlz.jpg)
 
