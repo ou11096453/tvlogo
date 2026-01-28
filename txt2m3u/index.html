@@ -173,6 +173,42 @@ textarea:focus {
     background-color: white;
 }
 
+/* 文件上传区域 */
+.file-upload-section {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 10px 15px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px dashed var(--border-color);
+}
+
+.file-upload-section .btn {
+    padding: 8px 15px;
+    font-size: 0.9rem;
+}
+
+.file-upload-section input[type="file"] {
+    display: none;
+}
+
+.file-name {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-info {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-left: auto;
+}
+
 /* 折叠配置区域 */
 .config-collapse {
     background: #f8f9fa;
@@ -395,6 +431,16 @@ footer {
     textarea {
         min-height: 250px;
     }
+    
+    .file-upload-section {
+        flex-wrap: wrap;
+    }
+    
+    .file-info {
+        margin-left: 0;
+        margin-top: 5px;
+        width: 100%;
+    }
 }
 
 @media (max-width: 480px) {
@@ -434,6 +480,7 @@ footer {
     textarea:focus {
         background-color: #444444;
         box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.4);
+        outline: none;
     }
     
     .config-collapse {
@@ -451,6 +498,11 @@ footer {
     
     textarea {
         background-color: #383838;
+    }
+    
+    .file-upload-section {
+        background-color: #383838;
+        border-color: #555555;
     }
 }
 </style>
@@ -476,7 +528,18 @@ footer {
                     <i class="fas fa-pencil-alt"></i>
                     输入内容 (TXT 或 M3U 列表)
                 </div>
-                <textarea id="input" placeholder="在此粘贴 TXT 或 M3U 列表..."></textarea>
+                
+                <!-- 文件上传区域 -->
+                <div class="file-upload-section">
+                    <input type="file" id="fileInput" accept=".txt,.m3u">
+                    <button class="btn btn-info" onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-upload"></i> 上传文件
+                    </button>
+                    <span id="fileName" class="file-name"></span>
+                    <span id="fileInfo" class="file-info">支持 .txt 和 .m3u 格式</span>
+                </div>
+                
+                <textarea id="input" placeholder="在此粘贴 TXT 或 M3U 列表，或直接上传文件..."></textarea>
             </div>
             
             <!-- 折叠配置区域 -->
@@ -555,6 +618,76 @@ footer {
 </div>
 
 <script>
+// ===== 文件上传功能 =====
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('fileInput');
+    const fileNameDisplay = document.getElementById('fileName');
+    const fileInfoDisplay = document.getElementById('fileInfo');
+    const inputArea = document.getElementById('input');
+    
+    fileInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        
+        if (!file) {
+            return;
+        }
+        
+        // 验证文件类型
+        const validExtensions = ['.txt', '.m3u'];
+        const fileName = file.name.toLowerCase();
+        const isValidFile = validExtensions.some(ext => fileName.endsWith(ext));
+        
+        if (!isValidFile) {
+            alert('请上传 .txt 或 .m3u 格式的文件！');
+            fileInput.value = ''; // 清空文件输入
+            fileNameDisplay.textContent = '';
+            fileInfoDisplay.textContent = '支持 .txt 和 .m3u 格式';
+            return;
+        }
+        
+        // 显示文件名
+        fileNameDisplay.textContent = '📄 ' + file.name;
+        
+        // 显示文件大小
+        const fileSize = formatFileSize(file.size);
+        fileInfoDisplay.textContent = '文件大小: ' + fileSize;
+        
+        // 读取文件内容
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            const content = e.target.result;
+            inputArea.value = content;
+            
+            // 显示成功提示
+            fileInfoDisplay.textContent = '✅ 已加载: ' + file.name + ' (' + fileSize + ')';
+            
+            // 3秒后恢复默认提示
+            setTimeout(function() {
+                fileInfoDisplay.textContent = '支持 .txt 和 .m3u 格式';
+            }, 3000);
+        };
+        
+        reader.onerror = function() {
+            alert('读取文件时发生错误，请重试！');
+            fileInput.value = '';
+            fileNameDisplay.textContent = '';
+            fileInfoDisplay.textContent = '支持 .txt 和 .m3u 格式';
+        };
+        
+        reader.readAsText(file);
+    });
+});
+
+// 格式化文件大小
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
 // ===== 折叠面板功能 =====
 document.addEventListener('DOMContentLoaded', function() {
     const configToggle = document.getElementById('config-toggle');
@@ -768,6 +901,10 @@ function m3uToTxt(){
 function clearAll(){
     document.getElementById('input').value='';
     document.getElementById('output').value='';
+    // 同时清空文件上传相关显示
+    document.getElementById('fileInput').value = '';
+    document.getElementById('fileName').textContent = '';
+    document.getElementById('fileInfo').textContent = '支持 .txt 和 .m3u 格式';
 }
 
 function copyOutput(){
