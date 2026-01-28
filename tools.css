@@ -1,0 +1,597 @@
+/* 工具汇总页专用CSS */
+:root {
+    --primary-color: #2196f3;
+    --secondary-color: #4caf50;
+    --error-color: #f44336;
+    --warning-color: #ff9800;
+    --purple-color: #9c27b0;
+    --teal-color: #26c6da; /* 新增青色系 */
+    --pink-color: #e91e63; /* 新增粉红色系 */
+    --bg-color: #f5f5f5;
+    --card-bg: #ffffff;
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --border-color: #e0e0e0;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    line-height: 1.6;
+    -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
+    min-height: 100vh;
+}
+
+/* 统一滚动条样式 - 应用到所有滚动条 */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* 暗色模式适配 */
+@media (prefers-color-scheme: dark) {
+    ::-webkit-scrollbar-track {
+        background: #333;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: #555;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: #666;
+    }
+}
+
+/* 微信公众号信息样式 */
+.wechat-info {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 4px 15px;
+    background-color: rgba(7, 193, 96, 0.1);
+    border-radius: 20px;
+    border: 1px solid rgba(7, 193, 96, 0.2);
+    max-width: 160px;
+    margin-left: auto;
+    margin-right: auto;
+    transition: all 0.3s ease;
+}
+
+.wechat-info:hover {
+    background-color: rgba(7, 193, 96, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(7, 193, 96, 0.2);
+}
+
+.wechat-icon {
+    color: #07C160;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wechat-text {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.wechat-name {
+    color: #07C160;
+    font-weight: 600;
+    margin-left: 3px;
+}
+
+/* 暗色模式适配 */
+@media (prefers-color-scheme: dark) {
+    .wechat-info {
+        background-color: rgba(7, 193, 96, 0.15);
+        border-color: rgba(7, 193, 96, 0.3);
+    }
+    
+    .wechat-info:hover {
+        background-color: rgba(7, 193, 96, 0.2);
+    }
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .wechat-info {
+        padding: 6px 12px;
+        max-width: 180px;
+    }
+    
+    .wechat-icon {
+        font-size: 1.1rem;
+    }
+    
+    .wechat-text {
+        font-size: 0.8rem;
+    }
+}
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* 简化页头样式 */
+.tools-header {
+    background-color: var(--card-bg);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    text-align: center;
+    margin-bottom: 30px;
+    border: 1px solid var(--border-color);
+}
+
+.tools-header h1 {
+    color: var(--primary-color);
+    margin-bottom: 10px;
+    font-size: 2.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.tools-header .title-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background-color: #9c27b0;
+    border-radius: 50%;
+    color: white;
+    font-size: 1.5rem;
+}
+
+.tools-header .subtitle {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    line-height: 1.6;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* 工具网格布局 - 改为3列 */
+.tools-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+/* 工具卡片样式 - 现在整个卡片是链接 */
+.tool-card {
+    background-color: var(--card-bg);
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: var(--shadow);
+    transition: all 0.3s ease;
+    border: 1px solid var(--border-color);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    text-decoration: none; /* 移除链接下划线 */
+    color: inherit; /* 继承文字颜色 */
+    cursor: pointer; /* 显示手型光标 */
+}
+
+.tool-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    border-color: var(--primary-color);
+}
+
+/* 为不同工具卡片设置不同的悬停边框颜色 */
+.tool-card:nth-child(1):hover {
+    border-color: var(--teal-color);
+}
+
+.tool-card:nth-child(2):hover {
+    border-color: var(--primary-color);
+}
+
+.tool-card:nth-child(3):hover {
+    border-color: var(--secondary-color);
+}
+
+.tool-card:nth-child(4):hover {
+    border-color: var(--warning-color);
+}
+
+.tool-card:nth-child(5):hover {
+    border-color: var(--purple-color);
+}
+
+/* 工具头部：图标和标题在同一行 */
+.tool-header {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    gap: 15px;
+}
+
+/* 工具图标区域 */
+.tool-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--primary-color), #1976d2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+    margin-top: 5px;
+}
+
+/* 第一个工具 - 青色系 */
+.tool-card:nth-child(1) .tool-icon {
+    background: linear-gradient(135deg, var(--teal-color), #0097a7);
+}
+
+.tool-card:nth-child(3) .tool-icon {
+    background: linear-gradient(135deg, var(--secondary-color), #388e3c);
+}
+
+.tool-card:nth-child(4) .tool-icon {
+    background: linear-gradient(135deg, var(--warning-color), #f57c00);
+}
+
+.tool-card:nth-child(5) .tool-icon {
+    background: linear-gradient(135deg, var(--purple-color), #7b1fa2);
+}
+
+/* 工具标题区域 */
+.tool-title {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+}
+
+.tool-title h3 {
+    font-size: 1.4rem;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.3;
+}
+
+.tool-tag {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    align-self: flex-start;
+    margin-top: 5px;
+}
+
+.tool-card:nth-child(1) .tool-tag {
+    background-color: var(--teal-color);
+}
+
+.tool-card:nth-child(3) .tool-tag {
+    background-color: var(--secondary-color);
+}
+
+.tool-card:nth-child(4) .tool-tag {
+    background-color: var(--warning-color);
+}
+
+.tool-card:nth-child(5) .tool-tag {
+    background-color: var(--purple-color);
+}
+
+/* 工具描述 */
+.tool-description {
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    flex-grow: 1;
+    line-height: 1.7;
+    font-size: 0.95rem;
+}
+
+.tool-description ul {
+    margin-top: 10px;
+    padding-left: 18px;
+}
+
+.tool-description li {
+    margin-bottom: 6px;
+    position: relative;
+    font-size: 0.9rem;
+}
+
+.tool-description li:before {
+    content: "•";
+    color: var(--primary-color);
+    font-weight: bold;
+    position: absolute;
+    left: -15px;
+}
+
+.tool-card:nth-child(1) .tool-description li:before {
+    color: var(--teal-color);
+}
+
+.tool-card:nth-child(3) .tool-description li:before {
+    color: var(--secondary-color);
+}
+
+.tool-card:nth-child(4) .tool-description li:before {
+    color: var(--warning-color);
+}
+
+.tool-card:nth-child(5) .tool-description li:before {
+    color: var(--purple-color);
+}
+
+/* 工具特性标签 */
+.tool-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.feature-tag {
+    background-color: #e3f2fd;
+    color: #1976d2;
+    padding: 3px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* 第一个工具的特性标签 */
+.tool-card:nth-child(1) .feature-tag {
+    background-color: #e0f2f1;
+    color: #00897b;
+}
+
+.tool-card:nth-child(3) .feature-tag {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.tool-card:nth-child(4) .feature-tag {
+    background-color: #fff3e0;
+    color: #ef6c00;
+}
+
+.tool-card:nth-child(5) .feature-tag {
+    background-color: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.feature-tag i {
+    font-size: 0.7rem;
+}
+
+/* 底部信息 */
+.tools-footer {
+    text-align: center;
+    padding: 30px 0 20px;
+    margin-top: 20px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.tools-footer p {
+    margin-bottom: 10px;
+}
+
+/* 暗色模式适配 */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-color: #1a1a1a;
+        --card-bg: #2d2d2d;
+        --text-primary: #f0f0f0;
+        --text-secondary: #b0b0b0;
+        --border-color: #444444;
+        --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    
+    .tools-header {
+        background-color: var(--card-bg);
+        border-color: var(--border-color);
+    }
+    
+    .tools-header h1 {
+        color: var(--primary-color);
+    }
+    
+    .tools-header .subtitle {
+        color: var(--text-secondary);
+    }
+    
+    .feature-tag {
+        background-color: #2c3e50;
+        color: #90caf9;
+    }
+    
+    .tool-card:nth-child(1) .feature-tag {
+        background-color: #004d40;
+        color: #80cbc4;
+    }
+    
+    .tool-card:nth-child(3) .feature-tag {
+        background-color: #1b5e20;
+        color: #a5d6a7;
+    }
+    
+    .tool-card:nth-child(4) .feature-tag {
+        background-color: #5d4037;
+        color: #ffcc80;
+    }
+    
+    .tool-card:nth-child(5) .feature-tag {
+        background-color: #4a235a;
+        color: #e1bee7;
+    }
+}
+
+/* 响应式设计 */
+@media (max-width: 992px) {
+    .tools-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .tools-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .tools-header {
+        padding: 25px 20px;
+        margin-bottom: 25px;
+    }
+    
+    .tools-header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .tool-card {
+        padding: 20px;
+    }
+    
+    .tool-header {
+        gap: 12px;
+    }
+    
+    .tool-icon {
+        width: 45px;
+        height: 45px;
+        font-size: 1.2rem;
+    }
+    
+    .tool-title h3 {
+        font-size: 1.3rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 15px;
+    }
+    
+    .tools-header {
+        padding: 20px 15px;
+        margin-bottom: 20px;
+    }
+    
+    .tools-header h1 {
+        font-size: 1.6rem;
+    }
+    
+    .tools-header .title-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+    
+    .tool-card {
+        padding: 18px;
+    }
+    
+    .tool-header {
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .tool-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
+        border-radius: 10px;
+    }
+    
+    .tool-title h3 {
+        font-size: 1.2rem;
+    }
+    
+    .tool-description {
+        font-size: 0.9rem;
+    }
+    
+    .tool-description li {
+        font-size: 0.85rem;
+    }
+    
+    .feature-tag {
+        font-size: 0.75rem;
+        padding: 2px 8px;
+    }
+}
+
+/* 第六个工具 - 粉红色系 */
+.tool-card:nth-child(6) .tool-icon {
+    background: linear-gradient(135deg, var(--pink-color), #c2185b);
+}
+
+.tool-card:nth-child(6):hover {
+    border-color: var(--pink-color);
+}
+
+.tool-card:nth-child(6) .tool-tag {
+    background-color: var(--pink-color);
+}
+
+.tool-card:nth-child(6) .tool-description li:before {
+    color: var(--pink-color);
+}
+
+.tool-card:nth-child(6) .feature-tag {
+    background-color: #fce4ec;
+    color: #ad1457;
+}
+
+/* 暗色模式适配 */
+@media (prefers-color-scheme: dark) {
+    .tool-card:nth-child(6) .feature-tag {
+        background-color: #880e4f;
+        color: #f48fb1;
+    }
+}
