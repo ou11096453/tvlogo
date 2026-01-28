@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SOCKS5验证工具-批量验证&直播源匹配</title>
+    <!-- 圆形Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='%23673ab7'/><path d='M26 24h12v4H26v-4zm-2 8v-4h16v4H24zm20 8H20v-4h24v4z' fill='white'/><circle cx='32' cy='32' r='4' fill='white'/></svg>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>
+                <span class="title-icon">
+                    <i class="fas fa-check-double"></i>
+                </span>
+                SOCKS5代理批量验证工具
+            </h1>
+            <p class="subtitle">批量验证SOCKS5代理可用性，自动匹配可代理播放的直播源</p>
+        </header>
+        
+        <div class="main-content">
+            <!-- 左侧：配置面板 -->
+            <div class="panel config-panel">
+                <div class="panel-title">
+                    <i class="fas fa-sliders-h"></i>
+                    <h2>配置面板</h2>
+                </div>
+                
+                <!-- SOCKS5代理配置 -->
+<div class="form-group">
+    <div class="input-counter-proxy">
+        <label for="proxy-list">SOCKS5代理列表</label>
+        <span class="counter-badge" id="proxy-count-badge">0</span>
+    </div>
+    <textarea id="proxy-list" rows="3" placeholder="一行一个，格式：IP:端口 或 IP:端口@用户名:密码；支持socks5://
+格式示例：
+127.0.0.1:1080
+socks5://127.0.0.1:1080
+192.168.1.100:1080
+45.67.89.123:10808@admin:password
+218.56.34.78:7890"></textarea>
+</div>
+                
+                <!-- 直播源配置 -->
+<div class="form-group">
+    <div class="input-counter-stream">
+        <label for="stream-list">直播源列表</label>
+        <span class="counter-badge" id="stream-count-badge">0</span>
+    </div>
+    <textarea id="stream-list" rows="3" placeholder="支持分组格式：
+湖南移动,#genre#
+http://39.134.24.3/PLTV/1/224/3221225500/index.m3u8
+
+央视,#genre#
+http://192.168.1.100:8080/live/cctv1.m3u8
+
+也支持纯URL：
+http://example.com/live.m3u8"></textarea>
+</div>
+                
+                <!-- 直播源操作按钮 -->
+                <div class="config-actions">
+                    <button id="load-example-streams" class="btn btn-warning">
+                        <i class="fas fa-file-import"></i> 直播源样本
+                    </button>
+                    <button id="load-sample-txt" class="btn btn-danger">
+                        <i class="fas fa-file-upload"></i> 导入TXT
+                    </button>
+                </div>
+                
+                <!-- 测试参数配置（默认折叠） -->
+                <div class="compact-group">
+                    <div class="compact-group-title" id="params-toggle">
+                        <div>
+                            <i class="fas fa-cog"></i>
+                                 <span class="compact-group-title-text">测试参数配置</span>
+                        </div>
+                        <i class="fas fa-chevron-down compact-group-arrow"></i>
+                    </div>
+                    
+                    <div class="compact-group-content" id="params-content">
+                        <!-- 超时和并发配置 -->
+                        <div class="form-row-compact">
+                            <div class="form-group">
+                                <label for="proxy-timeout">代理超时（秒）</label>
+                                <input type="number" id="proxy-timeout" value="5" min="1" max="16" step="1">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="proxy-concurrent">并发数</label>
+                                <input type="number" id="proxy-concurrent" value="5" min="1" max="10" step="1">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="stream-timeout">直播源超时（秒）</label>
+                                <input type="number" id="stream-timeout" value="5" min="1" max="16" step="1">
+                            </div>
+                        </div>
+                        
+                        <!-- 请求头配置 -->
+                        <div class="header-config-group">
+                            <div class="form-group">
+                                <label for="user-agent">User-Agent</label>
+                                <input type="text" id="user-agent" value="okhttp/3.15" placeholder="可选：自定义User-Agent">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="referer">Referer</label>
+                                <input type="text" id="referer" placeholder="可选：设置Referer请求头">
+                            </div>
+                        </div>
+                        
+                        <!-- 复选框网格布局 -->
+                        <div class="checkbox-grid">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="test-anonymity" checked>
+                                <label for="test-anonymity">测试代理匿名性</label>
+                            </div>
+                            
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="test-only-m3u8" checked>
+                                <label for="test-only-m3u8">仅测试M3U8格式</label>
+                            </div>
+                            
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="keep-grouping" checked>
+                                <label for="keep-grouping">保留分组信息</label>
+                            </div>
+                        </div>
+                        
+                        <!-- 清空按钮 -->
+                        <div class="buttons" style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border-color);">
+                            <button id="clear-all-config" class="btn btn-clear" style="margin-left: auto;">
+                                <i class="fas fa-trash-alt"></i> 清空所有配置
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                  <div class="info-message">
+                        <i class="fas fa-info-circle"></i> 仅验证代理时，直播源可为空。完整测试时，先验证代理IP有效性，再使用有效代理IP测试直播源。
+                    </div>
+                    
+                <!-- 测试操作按钮 -->
+                <div class="buttons scan-controls">
+                    <button id="test-proxies-btn" class="btn" style="background-color: #2196f3;">
+                        <i class="fas fa-network-wired"></i> 仅验证代理
+                    </button>
+                    <button id="full-test-btn" class="btn btn-success">
+                        <i class="fas fa-broadcast-tower"></i> 完整测试
+                    </button>
+                    <button id="stop-test-btn" class="btn btn-danger" style="display: none;">
+                        <i class="fas fa-stop-circle"></i> 停止
+                    </button>
+                </div>
+                
+                <!-- 进度条 -->
+                <div class="progress-container">
+                    <div id="progress-fill" class="progress-bar"></div>
+                </div>
+            </div>
+            
+            <!-- 右侧：结果面板 -->
+            <div class="panel results-panel">
+                <div class="panel-title">
+                    <i class="fas fa-chart-bar"></i>
+                    <h2>测试结果</h2>
+                    <div style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
+                        <span id="test-status" class="status-badge status-info">就绪</span>
+                    </div>
+                </div>
+                
+                <!-- 响应信息 -->
+                <div class="response-info">
+                    <div class="response-info-item">
+                        <span class="response-info-label">总代理:</span>
+                        <span id="total-proxies-stat" class="response-info-value">0</span>
+                    </div>
+                    <div class="response-info-item">
+                        <span class="response-info-label">可用代理:</span>
+                        <span id="available-proxies-stat" class="response-info-value" style="color: var(--secondary-color);">0</span>
+                    </div>
+                    <div class="response-info-item">
+                        <span class="response-info-label">失败代理:</span>
+                        <span id="failed-proxies-stat" class="response-info-value" style="color: var(--error-color);">0</span>
+                    </div>
+                    <div class="response-info-item">
+                        <span class="response-info-label">成功率:</span>
+                        <span id="success-rate-stat" class="response-info-value">0%</span>
+                    </div>
+                    <div class="response-info-item">
+                        <span class="response-info-label">平均响应:</span>
+                        <span id="avg-response-stat" class="response-info-value">0ms</span>
+                    </div>
+                </div>
+                
+                <!-- 标签页 -->
+                <div class="tabs">
+                    <div class="tab active" data-tab="proxy-results">
+                        <i class="fas fa-network-wired"></i> 代理验证结果
+                        <span class="stat-badge" id="proxy-results-badge">0</span>
+                    </div>
+                    <div class="tab" data-tab="stream-results">
+                        <i class="fas fa-satellite"></i> 直播源测试结果
+                        <span class="stat-badge" id="stream-results-badge">0</span>
+                    </div>
+                </div>
+                
+                <!-- 代理结果标签页 -->
+                <div id="proxy-results-tab" class="tab-content active">
+                    <div class="batch-results">
+                       <table id="proxy-result-table" class="batch-result-table">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>代理地址</th>
+            <th>状态</th>
+            <th>响应时间</th>
+            <th>匿名性</th>
+        </tr>
+    </thead>
+    <tbody id="proxy-result-body">
+        <tr>
+            
+            <td colspan="5" style="text-align: center; padding: 20px; color: #94a3b8;">
+                <div class="no-results1">
+                            <i class="fas fa-list"></i>
+                            <p>暂无代理验证结果</p>
+                        </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+                    </div>
+                    
+                    <div class="buttons" style="margin-top: 7px; padding-top: 10px; border-top: 1px dashed var(--border-color);max-height:40px;">
+                        <button id="export-proxy-result-btn" class="btn btn-export">
+                            <i class="fas fa-download"></i> 导出
+                        </button>
+                        <button id="clear-proxy-results-btn" class="btn btn-clear">
+                            <i class="fas fa-trash-alt"></i> 清除
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 直播源结果标签页 -->
+                <div id="stream-results-tab" class="tab-content">
+                    <!-- 直播源统计 -->
+                    <div class="response-info" style="margin-bottom: 15px;">
+                        <div class="response-info-item">
+                            <span class="response-info-label">总直播源:</span>
+                            <span id="total-streams-stat" class="response-info-value">0</span>
+                        </div>
+                        <div class="response-info-item">
+                            <span class="response-info-label">匹配成功:</span>
+                            <span id="matched-streams-stat" class="response-info-value" style="color: var(--secondary-color);">0</span>
+                        </div>
+                        <div class="response-info-item">
+                            <span class="response-info-label">最佳代理:</span>
+                            <span id="best-proxy-stat" class="response-info-value">-</span>
+                        </div>
+                        <div class="response-info-item">
+                            <span class="response-info-label">匹配率:</span>
+                            <span id="match-rate-stat" class="response-info-value">0%</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 代理卡片容器 -->
+                    <div id="proxy-cards-container" style="max-height: 500px; overflow-y: auto; margin-bottom: 15px;">
+                        <div class="no-results">
+                            <i class="fas fa-list"></i>
+                            <p>暂无直播源匹配结果</p>
+                        </div>
+                    </div>
+                    
+                    <div class="buttons" style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border-color);">
+                        <button id="export-match-result-btn" class="btn btn-export">
+                            <i class="fas fa-file-alt"></i> 导出
+                        </button>
+                        <button id="copy-matched-urls-btn" class="btn">
+                            <i class="fas fa-copy"></i> 复制
+                        </button>
+                    </div>
+                </div>
+                
+               <!-- 测试信息提示 -->
+<div id="test-info">
+    <div id="test-info-header">
+        <div id="test-info-title">
+            <i class="fas fa-info-circle"></i> 测试信息
+        </div>
+        <button id="clear-all-results-btn" class="btn-clear">
+            <i class="fas fa-trash-alt"></i> 清空所有结果
+        </button>
+    </div>
+    <div id="test-details">
+        等待开始测试...
+    </div>
+</div>
+            </div>
+        </div>
+        
+        <!-- 底部面板：测试记录 -->
+<div class="panel history-panel">
+    <div class="panel-title">
+        <i class="fas fa-history"></i>
+        <h2>测试记录</h2>
+        <div style="margin-left: auto;display: flex;align-items: center;gap: 10px;flex-direction: row;">
+            <span id="history-count" class="history-count-display">记录数: 0/20</span>
+            <button id="clear-history-btn" class="btn-clear">
+                <i class="fas fa-trash-alt"></i>清空记录
+            </button>
+        </div>
+    </div>
+    <div id="history-list-container" class="history-container">
+        <div id="history-list">
+            <div class="history-item placeholder">
+                <div class="history-info">
+                    <div class="history-first-line">暂无测试记录</div>
+                    <div class="history-second-line">开始测试后，记录将显示在这里</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+        
+        <!-- 底部面板：扫描日志 -->
+        <div class="panel log-panel">
+            <div class="panel-title">
+                <i class="fas fa-file-alt"></i>
+                <h2>测试日志</h2>
+                <div style="margin-left: auto;">
+                    <button id="clear-log-btn" class="btn-clear">
+                        <i class="fas fa-trash-alt"></i>清空日志
+                    </button>
+                </div>
+            </div>
+            <div id="log-container">
+                <div id="log-box" class="log-box">
+                    
+                </div>
+                
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>SOCKS5代理批量验证工具 &copy; 2025 | 批量验证代理可用性，匹配可代理直播源</p>
+            <p style="margin-top: 5px; font-size: 12px;">请遵守相关法律法规，仅用于合法测试</p>
+        </div>
+    </div>
+    
+    <!-- 文件上传input（隐藏） -->
+    <input type="file" id="file-upload" accept=".txt" style="display: none;">
+    
+    <script src="script.js"></script>
+</body>
+</html>
