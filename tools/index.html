@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>直播源工具箱 - 直播源测试验证工具集</title>
+    <!-- 汇总页圆形Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='%239c27b0'/><path d='M24 20h16v6H24v-6zm-6 6h-4v16h4V26zm28 0h-4v16h4V26zM22 26v16h20V26H22zm-8 18h36v6H14v-6z' fill='white'/></svg>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="tools.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 简化页头 -->
+        <header class="tools-header">
+            <h1>
+                 <span class="title-icon">
+                    <i class="fas fa-toolbox"></i>
+                </span>
+                直播源工具箱
+            </h1>
+            <p class="subtitle">
+                直播源测试、验证和扫描打造的专业工具集，帮助您快速筛选高质量直播源，支持socks5代理。
+            </p>
+        </header>
+
+        <!-- 工具网格 -->
+        <div class="tools-grid">
+            <!-- 工具0: 直播源格式转换 -->
+<a href="txt2m3u/" class="tool-card" target="_blank" rel="noopener noreferrer">
+    <div class="tool-header">
+        <div class="tool-icon">
+            <i class="fas fa-exchange-alt"></i>
+        </div>
+        
+        <div class="tool-title">
+            <h3>直播源格式转换工具</h3>
+            <span class="tool-tag">入门工具</span>
+        </div>
+    </div>
+        
+    <div class="tool-description">
+        <p>TXT和M3U格式直播源双向互转，支持智能分组、频道名净化、Logo自动生成等高级功能。</p>
+        <ul>
+            <li>TXT与M3U格式双向智能转换</li>
+            <li>基于规则的智能频道分组功能</li>
+            <li>频道名自动净化与Logo生成</li>
+            <li>支持自定义EPG和分组规则</li>
+        </ul>
+    </div>
+    
+    <div class="tool-features">
+        <span class="feature-tag"><i class="fas fa-sync-alt"></i> 双向转换</span>
+        <span class="feature-tag"><i class="fas fa-object-group"></i> 智能分组</span>
+        <span class="feature-tag"><i class="fas fa-magic"></i> 自动净化</span>
+    </div>
+</a>
+            <!-- 工具1: 直播源响应测试 -->
+            <a href="resp/" class="tool-card" target="_blank" rel="noopener noreferrer">
+                <div class="tool-header">
+                    <div class="tool-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    
+                    <div class="tool-title">
+                        <h3>直播源响应测试工具</h3>
+                        <span class="tool-tag">基础工具</span>
+                    </div>
+                </div>
+                    
+                <div class="tool-description">
+                    <p>快速测试单个直播源的响应状态、速度和可用性，支持多种协议和格式。</p>
+                    <ul>
+                        <li>实时检测直播源响应时间和状态码</li>
+                        <li>支持socks5代理、hosts配置</li>
+                        <li>支持M3U8、FLV、RTMP等多种格式</li>
+                        <li>详细的响应头信息分析</li>
+                    </ul>
+                </div>
+                
+                <div class="tool-features">
+                    <span class="feature-tag"><i class="fas fa-check-circle"></i> 快速测试</span>
+                    <span class="feature-tag"><i class="fas fa-chart-line"></i> 性能分析</span>
+                    <span class="feature-tag"><i class="fas fa-file-alt"></i> 格式检测</span>
+                </div>
+            </a>
+
+            <!-- 工具2: SOCKS5代理验证工具 -->
+            <a href="val/" class="tool-card" target="_blank" rel="noopener noreferrer">
+                <div class="tool-header">
+                    <div class="tool-icon">
+                        <i class="fas fa-broadcast-tower"></i>
+                    </div>
+                    
+                    <div class="tool-title">
+                        <h3>直播源有效性验证工具</h3>
+                        <span class="tool-tag">核心工具</span>
+                    </div>
+                </div>
+                
+                <div class="tool-description">
+                    <p>测试直播源的可用性，验证代理服务器的连接质量和稳定性。</p>
+                    <ul>
+                        <li>支持SOCKS5代理服务器配置</li>
+                        <li>支持导入txt格式播放列表</li>
+                        <li>代理连接速度和质量测试</li>
+                        <li>匿名性检测和IP地址验证</li>
+                    </ul>
+                </div>
+                
+                <div class="tool-features">
+                    <span class="feature-tag"><i class="fas fa-globe"></i> 代理支持</span>
+                    <span class="feature-tag"><i class="fas fa-shield-alt"></i> 可用验证</span>
+                    <span class="feature-tag"><i class="fas fa-tachometer-alt"></i> 速度测试</span>
+                </div>
+            </a>
+
+            <!-- 工具3: 直播源批量扫描工具 -->
+            <a href="scan/" class="tool-card" target="_blank" rel="noopener noreferrer">
+                <div class="tool-header">
+                    <div class="tool-icon">
+                        <i class="fas fa-satellite-dish"></i>
+                    </div>
+                    
+                    <div class="tool-title">
+                        <h3>直播源扫描工具</h3>
+                        <span class="tool-tag">进阶工具</span>
+                    </div>
+                </div>
+                
+                <div class="tool-description">
+                    <p>支持模板变量、多线程并发扫描直播源，自动分类有效、超时和无效源。</p>
+                    <ul>
+                        <li>支持模板变量自动生成URL</li>
+                        <li>支持SOCKS5代理服务器配置</li>
+                        <li>多线程并发扫描，高效快速</li>
+                        <li>支持自定义请求头和代理</li>
+                    </ul>
+                </div>
+                
+                <div class="tool-features">
+                    <span class="feature-tag"><i class="fas fa-bolt"></i> 批量扫描</span>
+                    <span class="feature-tag"><i class="fas fa-code"></i> 模板变量</span>
+                    <span class="feature-tag"><i class="fas fa-layer-group"></i> 并发处理</span>
+                </div>
+            </a>
+        
+            <!-- 工具4: SOCKS5代理批量验证 -->
+            <a href="socks5/" class="tool-card" target="_blank" rel="noopener noreferrer">
+                <div class="tool-header">
+                    <div class="tool-icon">
+                        <i class="fas fa-check-double"></i>
+                    </div>
+                    
+                    <div class="tool-title">
+                        <h3>SOCKS5代理验证工具</h3>
+                        <span class="tool-tag">高级工具</span>
+                    </div>
+                </div>
+                
+                <div class="tool-description">
+                    <p>批量验证SOCKS5代理可用性，测试匹配可代理播放的直播源。</p>
+                    <ul>
+                        <li>批量验证SOCKS5代理连接性和响应速度</li>
+                        <li>智能匹配可代理播放的直播源</li>
+                        <li>支持分组格式，保留源列表结构</li>
+                        <li>两种测试模式：仅代理测试、完整匹配测试</li>
+                    </ul>
+                </div>
+                
+                <div class="tool-features">
+                    <span class="feature-tag"><i class="fas fa-bolt"></i> 批量验证</span>
+                    <span class="feature-tag"><i class="fas fa-shield-alt"></i> 匿名检测</span>
+                    <span class="feature-tag"><i class="fas fa-sync-alt"></i> 智能匹配</span>
+                </div>
+            </a>
+            
+            <!-- 工具5：占位/待开发 -->
+<a href="#" class="tool-card" onclick="comingSoon()" style="cursor: pointer;">
+    <div class="tool-header">
+        <div class="tool-icon">
+            <i class="fas fa-plus-circle"></i>
+        </div>
+        
+        <div class="tool-title">
+            <h3>更多功能筹划中</h3>
+            <span class="tool-tag">敬请期待</span>
+        </div>
+    </div>
+        
+    <div class="tool-description">
+        <p>正在构思更多实用的直播源工具。</p>
+        <ul>
+            <li>占位符</li>
+            <li>占位符</li>
+            <li>占位符</li>
+            <li>占位符</li>
+        </ul>
+    </div>
+    
+    <div class="tool-features">
+        <span class="feature-tag"><i class="fas fa-wrench"></i> 构思开发</span>
+        <span class="feature-tag"><i class="fas fa-bullhorn"></i> 功能预告</span>
+        <span class="feature-tag"><i class="fas fa-heart"></i> 暂无需求</span>
+    </div>
+</a>
+        </div>
+
+        <!-- 底部信息 -->
+        <footer class="tools-footer">
+            <p>直播源工具箱© 2025 | 专为直播源测试验证打造的专业工具集</p>
+            <p style="margin-top: 5px; font-size: 0.85rem;">请遵守相关法律法规，仅用于合法测试和验证目的</p>
+            <!-- 添加微信公众号信息 -->
+    <div class="wechat-info">
+        <div class="wechat-icon">
+            <i class="fab fa-weixin"></i>
+        </div>
+        <div class="wechat-text">
+            公众号: <span class="wechat-name">网络志</span>
+        </div>
+    </div>
+        </footer>
+    </div>
+
+    <script>
+        // 暗色模式检测
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.add('dark-mode');
+        }
+        
+        // 监听暗色模式变化
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+            if (e.matches) {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+        });
+    </script>
+</body>
+</html>
