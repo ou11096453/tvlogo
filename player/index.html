@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="referrer" content="no-referrer">
+  <title>视频播放器 - 支持SOCKS5代理</title>
+<!-- 播放器风格 favicon -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236a8dff'%3E%3Cpath d='M3 3v18l15-9-15-9z'/%3E%3C/svg%3E">
+<link rel="shortcut icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236a8dff'%3E%3Cpath d='M3 3v18l15-9-15-9z'/%3E%3C/svg%3E">
+  <!-- 外部资源 -->
+  <link href="https://s4.zstatic.net/ajax/libs/font-awesome/7.0.0/css/all.min.css" rel="stylesheet" />
+  <link href="https://fonts.loli.net/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="hls.js"></script>
+  <link rel="stylesheet" href="https://unpkg.byted-static.com/xgplayer/3.0.21/dist/index.min.css"/>
+  <script charset="utf-8" src="https://unpkg.byted-static.com/xgplayer/3.0.21/dist/index.min.js"></script>
+  <script charset="utf-8" src="https://unpkg.byted-static.com/xgplayer-flv/3.0.21/dist/index.min.js"></script>
+  <!-- 本地样式 -->
+  <link rel="stylesheet" href="style.css">
+  <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; worker-src * blob: 'unsafe-inline'; connect-src * 'unsafe-inline'; img-src * data: blob:; frame-src *; style-src * 'unsafe-inline';">  
+</head>
+<body>
+<div id="app-container">
+  <header class="header">
+    <div class="logo">
+      <i class="fas fa-play-circle"></i>
+      <h1>视频播放器</h1>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-icon btn-secondary" id="themeToggle" aria-label="切换主题">
+        <i class="fas fa-moon"></i>
+      </button>
+      <button class="btn btn-icon btn-secondary" id="toggleSystemTimeBtn" aria-label="显示/隐藏系统时间">
+        <i class="fas fa-clock"></i>
+      </button>
+      <button class="btn btn-icon btn-secondary" id="headerHistoryToggleBtn" aria-label="打开历史记录">
+        <i class="fas fa-history"></i>
+      </button>
+      <button class="btn btn-icon btn-secondary" id="headerSettingsToggleBtn" aria-label="打开设置">
+        <i class="fas fa-cog"></i>
+      </button>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <section class="video-player-section">
+      <div id="uploadPlaceholder" class="upload-placeholder">
+        <i class="fas fa-cloud-upload-alt"></i>
+        <h3>拖放视频文件到此处</h3>
+        <p>或输入在线 URL 进行播放</p>
+        <p class="text-small">支持 MP4, M3U8, FLV, WebM, MKV 等主流格式</p>
+      </div>
+
+      <div class="video-container" id="videoContainer">
+        <video id="videoPlayer"></video>
+        <div id="xgplayerContainer" style="display: none;"></div>
+        <div id="systemTimeDisplay"></div>
+        <div id="resolutionDisplay" class="resolution-display"></div>
+<div id="fpsDisplay" class="fps-display"></div>
+        <div id="inVideoControls">
+
+  <button class="btn btn-icon" id="inVideoPlayPauseBtn" aria-label="播放/暂停">
+    <i class="fas fa-play"></i>
+  </button>
+  <div id="inVideoCurrentTimeDisplay" class="time-display">00:00</div>
+  <input type="range" min="0" max="0" value="0" step="0.01" class="seek-slider" id="inVideoSeekSlider" aria-label="播放进度">
+  <div id="inVideoDurationDisplay" class="time-display">00:00</div>
+
+  <div class="volume-controls">
+    <i class="fas fa-volume-up" id="inVideoVolumeIcon" aria-label="音量图标"></i>
+    <input type="range" min="0" max="100" value="100" class="volume-slider" id="inVideoVolumeSlider" aria-label="音量调节">
+    <span id="inVideoVolumePercentageDisplay">100%</span>
+  </div>
+
+  <button class="btn btn-icon" id="inVideoFullscreenBtn" aria-label="全屏">
+    <i class="fas fa-expand"></i>
+  </button>
+
+</div>
+      </div>
+    </section>
+
+    <section class="main-control-bar">
+      <div class="control-row" id="topPlayerControls">
+  <!-- 第一行：播放按钮 + 进度条 -->
+  <div class="top-row">
+    <button class="btn btn-icon btn-secondary" id="playPauseBtn" aria-label="播放/暂停">
+      <i class="fas fa-play"></i>
+    </button>
+    <div class="progress-bar-container">
+      <div id="currentTimeDisplay" class="time-display">00:00</div>
+      <input type="range" min="0" max="0" value="0" step="0.01" class="seek-slider" id="seekSlider" aria-label="播放进度">
+      <div id="durationDisplay" class="time-display">00:00</div>
+    </div>
+  </div>
+  
+  <!-- 第二行：音量控制 + 倍速 + 全屏 -->
+  <div class="bottom-row">
+    <div class="volume-controls">
+      <i class="fas fa-volume-up" id="volumeIcon" aria-label="音量图标"></i>
+      <input type="range" min="0" max="100" value="100" class="volume-slider" id="volumeSlider" aria-label="音量调节">
+      <span id="volumePercentageDisplay">100%</span>
+    </div>
+    <div class="speed-dropdown" id="speedDropdown">
+      <button class="btn btn-icon btn-secondary" id="speedBtn" aria-label="播放速度">
+        <i class="fas fa-tachometer-alt"></i>
+      </button>
+      <div class="speed-menu" id="speedMenu">
+        <button data-speed="0.5">0.5x</button>
+        <button data-speed="0.75">0.75x</button>
+        <button data-speed="1" class="active-speed-btn">1x</button>
+        <button data-speed="1.25">1.25x</button>
+        <button data-speed="1.5">1.5x</button>
+        <button data-speed="2">2x</button>
+      </div>
+    </div>
+    <button class="btn btn-icon btn-secondary" id="fullscreenBtn" aria-label="全屏">
+      <i class="fas fa-expand"></i>
+    </button>
+  </div>
+</div>
+  
+
+      <div class="control-row">
+        <div class="input-group">
+          <input type="text" id="videoURL" placeholder="输入视频URL (支持所有主流视频格式)" value="https://sf1-cdn-tos.huoshanstatic.com/obj/media-fe/xgplayer_doc_video/hls/xgplayer-demo.m3u8" />
+          <button class="btn btn-primary" id="loadVideoBtn"><i class="fas fa-play"></i> 加载视频</button>
+
+          <button class="btn btn-danger" id="stopPlaybackBtn"><i class="fas fa-stop"></i> 停止播放</button>
+        </div>
+      </div>
+
+      <!-- SOCKS5代理控制行 - 优化排版 -->
+      <div class="proxy-section">
+        <div class="proxy-header">
+          <button class="btn btn-proxy" id="toggleProxyBtn">
+            <i class="fas fa-network-wired"></i> <span id="proxyStatusText">代理: 关闭</span>
+          </button>
+          <button class="btn btn-icon btn-secondary" id="showProxySettingsBtn" title="代理设置">
+            <i class="fas fa-cog"></i>
+          </button>
+        </div>
+        <div class="proxy-settings-panel" id="proxySettingsPanel">
+          <div class="proxy-input-row">
+            <input type="text" id="proxyHost" placeholder="SOCKS5服务器IP">
+            <input type="number" id="proxyPort" placeholder="端口">
+          </div>
+          <div class="proxy-input-row">
+            <input type="text" id="proxyUser" placeholder="用户名(可选)">
+            <input type="password" id="proxyPass" placeholder="密码(可选)">
+          </div>
+          <div class="proxy-actions">
+            <button class="btn btn-warning btn-sm" id="testProxyBtn">测试代理</button>
+            <button class="btn btn-success btn-sm" id="saveProxyBtn">保存配置</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="statusIndicator" class="status-indicator stopped">
+        <i class="fas fa-circle"></i> 播放器已停止
+      </div>
+    </section>
+  </main>
+</div>
+
+<aside class="drawer-panel settings-panel-drawer" id="settingsPanel">
+  <div class="drawer-header">
+    <span class="drawer-title-wrapper"><i class="fas fa-cog"></i> 播放器设置</span>
+    <button class="close-btn" id="closeSettingsBtn"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="drawer-content">
+    <div class="setting-group">
+      <h4><i class="fas fa-image"></i> 背景定制</h4>
+      <div class="input-group" style="margin-bottom: var(--spacing-sm);">
+        <input type="text" id="backgroundURL" placeholder="背景图片URL" />
+        <button class="btn btn-secondary" id="applyBackgroundBtn">应用</button>
+      </div>
+      <div class="slider-group">
+        <label for="backgroundBlurSlider">模糊度:</label>
+        <input type="range" id="backgroundBlurSlider" min="0" max="20" step="1" value="5" />
+        <span id="backgroundBlurValue">5px</span>
+      </div>
+      <button class="btn btn-secondary btn-full-width" id="resetBackgroundBtn"><i class="fas fa-redo-alt"></i> 重置背景</button>
+    </div>
+
+    <div class="setting-group">
+      <h4><i class="fas fa-film"></i> 画面调节</h4>
+      <div class="btn-group" style="margin-bottom: var(--spacing-sm);">
+        <button class="btn btn-secondary" id="rotate90Btn"><i class="fas fa-redo-alt"></i> 旋转 90°</button>
+        <button class="btn btn-secondary" id="flipXBtn"><i class="fas fa-arrows-alt-h"></i> 水平镜像</button>
+        <button class="btn btn-secondary" id="flipYBtn"><i class="fas fa-arrows-alt-v"></i> 垂直镜像</button>
+      </div>
+      <div class="slider-group">
+        <label for="zoomSlider">缩放:</label>
+        <input type="range" id="zoomSlider" min="50" max="300" step="1" value="100" />
+        <span id="zoomValue">100%</span>
+      </div>
+      <button class="btn btn-secondary btn-full-width" id="resetTransformBtn"><i class="fas fa-sync-alt"></i> 重置画面</button>
+    </div>
+
+    <div class="setting-group">
+      <h4><i class="fas fa-palette"></i> 滤镜调节</h4>
+      <div class="slider-group"><label for="brightnessSlider">亮度:</label><input type="range" id="brightnessSlider" min="0" max="200" step="1" value="100" /><span id="brightnessValue">100%</span></div>
+      <div class="slider-group"><label for="contrastSlider">对比度:</label><input type="range" id="contrastSlider" min="0" max="200" step="1" value="100" /><span id="contrastValue">100%</span></div>
+      <div class="slider-group"><label for="saturationSlider">饱和度:</label><input type="range" id="saturationSlider" min="0" max="200" step="1" value="100" /><span id="saturationValue">100%</span></div>
+      <div class="slider-group"><label for="sharpenSlider">锐化:</label><input type="range" id="sharpenSlider" min="0" max="10" step="1" value="0" /><span id="sharpenValue">0</span></div>
+      <div class="btn-group preset-buttons" id="filterPresetsContainer" style="margin-top: var(--spacing-sm);">
+        <button class="btn btn-secondary preset-btn" data-preset="vibrant">鲜艳</button>
+        <button class="btn btn-secondary preset-btn" data-preset="cinematic">电影</button>
+        <button class="btn btn-secondary preset-btn" data-preset="monochrome">黑白</button>
+      </div>
+      <button class="btn btn-secondary btn-full-width" id="resetFilterBtn"><i class="fas fa-sync-alt"></i> 重置滤镜</button>
+    </div>
+  </div>
+</aside>
+
+<aside class="drawer-panel history-panel-drawer" id="historyPanel">
+  <div class="drawer-header">
+    <span class="drawer-title-wrapper"><i class="fas fa-history"></i><span class="history-title-text">播放历史</span></span>
+    <button class="close-btn" id="closeHistoryBtn"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="drawer-content">
+    <div class="history-loop-controls">
+      <button class="btn btn-danger" id="clearHistoryBtn"><i class="fas fa-trash"></i> 清空</button>
+      <button class="btn btn-secondary" id="loopSingleBtn" data-loop-mode="single"><i class="fas fa-redo-alt"></i> 单曲</button>
+      <button class="btn btn-secondary" id="loopListBtn" data-loop-mode="list"><i class="fas fa-list-ul"></i> 列表</button>
+      <button class="btn btn-secondary" id="loopShuffleBtn" data-loop-mode="shuffle"><i class="fas fa-random"></i> 随机</button>
+    </div>
+    <div class="history-list" id="historyList"></div>
+  </div>
+</aside>
+
+<svg id="sharpen-svg-filters" style="display:none;width:0;height:0;position:absolute;"></svg>
+
+<script src="main.js"></script>
+</body>
+</html>
