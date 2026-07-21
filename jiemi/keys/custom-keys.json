@@ -1,0 +1,16 @@
+﻿[
+  {
+    "name": "custom-example-aes128",
+    "key": "your-16-byte-key!",
+    "iv": "your-16-byte-iv!!",
+    "keySize": 16,
+    "algs": ["aes-128-cbc", "aes-128-ecb"]
+  },
+  {
+    "name": "custom-example-aes256",
+    "key": "0123456789abcdef0123456789abcdef",
+    "iv": "abcdef0123456789",
+    "keySize": 32,
+    "algs": ["aes-256-cbc"]
+  }
+]
