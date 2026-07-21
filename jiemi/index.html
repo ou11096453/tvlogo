@@ -1,68 +1,568 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>TVBox 接口解密工具</title>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>TVBox 接口解密</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/merge/merge.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/diff_match_patch/20121119/diff_match_patch.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/merge/merge.min.js"></script>
+
 <style>
-*{box-sizing:border-box}body{margin:0;background:#0a0e14;color:#dce6f0;font-family:-apple-system,Segoe UI,PingFang SC,Microsoft YaHei,sans-serif;padding:20px 16px 60px;max-width:1000px;margin:0 auto}
-h1{font-size:24px;margin:0 0 4px}.sub{color:#7a93b0;font-size:13px;line-height:1.6;margin-bottom:18px}
-.box{background:#141b26;border:1px solid #1f2d42;border-radius:10px;padding:16px;margin-bottom:14px}
-label{display:block;font-size:13px;color:#7a93b0;margin-bottom:6px}
-textarea,input{width:100%;background:#0d1520;color:#dce6f0;border:1px solid #1f2d42;border-radius:8px;padding:10px 12px;font:inherit;outline:none}
-textarea:focus,input:focus{border-color:#36c9b8}
-textarea{min-height:120px;resize:vertical;font-family:ui-monospace,Consolas,monospace;font-size:13px}
-.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-button{border:0;border-radius:8px;padding:10px 18px;font-weight:600;cursor:pointer;font-size:14px}
-button:disabled{opacity:.45}.bp{background:linear-gradient(135deg,#36c9b8,#5c9cfe);color:#031015}.bs{background:#1c2a3d;color:#dce6f0}
-.pill{background:#0d1520;border:1px solid #1f2d42;border-radius:8px;padding:10px;font-size:13px}
-.pill b{display:block;color:#7a93b0;font-weight:500;margin-bottom:4px;font-size:12px}
-.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
-pre{white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,Consolas,monospace;font-size:12.5px;max-height:500px;overflow:auto;margin:0}
-.ok{color:#2dd4a0}.err{color:#f06}small{color:#637a94;font-size:12px;display:block;margin-top:4px}
-.ft{text-align:center;color:#637a94;font-size:12px;margin-top:20px}
-.hint{background:#1a2740;border:1px solid #1f2d42;border-radius:6px;padding:10px 14px;font-size:12px;color:#7a93b0;line-height:1.6;margin-bottom:14px}
-</style></head><body>
-<h1>TVBox 接口解密工具</h1>
-<div class="sub">输入 URL 自动抓取解密，或粘贴密文手动解密。内置 41 组公开密钥，支持 AES/DES/3DES/XOR。</div>
-<div class="hint"><b>提示：</b>URL 必须直接返回 TVBox JSON 配置或加密内容。如果 URL 返回的是网页，请找配置接口的真实地址（通常带 /tvbox.json、/api.php?url= 等路径）。</div>
-<div class="box">
-<label>配置接口地址（输入 URL 自动抓取并解密）</label>
-<input id="inpUrl" placeholder="http://example.com/tvbox.json 或 http://xxx/api.php?url=xxx"/>
-<div style="height:10px"></div>
-<label>或粘贴明文 / 密文 / hex / base64（不填 URL 则走本地解密）</label>
-<textarea id="inp" placeholder="粘贴 TVBox 配置内容..."></textarea>
-<div style="height:10px"></div>
-<label>自定义密钥（可选，JSON 数组或每行一个 key）</label>
-<textarea id="keys" style="min-height:50px;font-size:12px" placeholder='[{"name":"my","key":"16byteslength!!","iv":"16byteslength!!","keySize":16,"algs":["aes-128-cbc"]}]'></textarea>
-<div class="btns"><button class="bp" id="btnRun">解密</button><button class="bs" id="btnCopy" disabled>复制结果</button><button class="bs" id="btnClear">清空</button></div></div>
-<div class="box"><div class="meta">
-<div class="pill"><b>状态</b><span id="s1">等待输入</span></div>
-<div class="pill"><b>模式</b><span id="s2">-</span></div>
-<div class="pill"><b>算法</b><span id="s3">-</span></div>
-<div class="pill"><b>密钥</b><span id="s4">-</span></div>
-<div class="pill"><b>编码</b><span id="s5">-</span></div>
-<div class="pill"><b>评分</b><span id="s6">-</span></div>
-</div></div>
-<div class="box"><label>解密结果</label><pre id="out">// 结果会显示在这里</pre></div>
-<div class="ft">TVBox 接口解密工具 v2.0 | 41 组内置密钥 | AES/DES/3DES/XOR | 远程 URL 解密</div>
+:root {
+  --text:#1c1c1e; --text-2:#3a3a3c; --text-3:#8e8e93;
+  --blue:#0a84ff; --blue-press:#0071e3; --green:#30d158; --red:#ff453a; --orange:#ff9f0a;
+  --card:rgba(255,255,255,.66); --field:rgba(255,255,255,.84); --chip:rgba(255,255,255,.58);
+  --line:rgba(60,60,67,.12); --line-soft:rgba(255,255,255,.62);
+  --shadow:0 12px 40px rgba(15,23,42,.08), 0 2px 8px rgba(15,23,42,.04);
+  --radius:20px; --radius-sm:14px; --blur:28px;
+  --pad:clamp(12px,3vw,22px); --page:min(980px,100%);
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{
+  margin:0; color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  font-size:16px; line-height:1.5; letter-spacing:-.01em; -webkit-font-smoothing:antialiased;
+  background:
+    radial-gradient(1100px 680px at 8% -8%, rgba(120,190,255,.42), transparent 56%),
+    radial-gradient(900px 560px at 100% 0%, rgba(196,160,255,.34), transparent 52%),
+    radial-gradient(760px 460px at 50% 110%, rgba(120,230,210,.28), transparent 56%),
+    linear-gradient(168deg,#f2f4f8 0%,#eef2f7 42%,#f5f1fa 100%);
+  background-attachment:fixed;
+  padding:max(16px, env(safe-area-inset-top)) var(--pad) max(40px, env(safe-area-inset-bottom));
+}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(circle at 18% 24%,rgba(255,255,255,.55),transparent 26%),radial-gradient(circle at 84% 72%,rgba(255,255,255,.28),transparent 28%)}
+.page{position:relative;z-index:1;width:var(--page);margin:0 auto}
+.hero{text-align:center;margin-bottom:clamp(14px,3vw,22px)}
+h1{font-size:clamp(26px,5.4vw,36px);font-weight:700;letter-spacing:-.035em;margin:0 0 8px;color:#0f172a}
+.sub{color:var(--text-3);font-size:clamp(13px,2.8vw,15px);line-height:1.65;margin:0 auto;max-width:36em}
+.tabs{display:flex;justify-content:center;gap:4px;margin:0 auto clamp(12px,2.5vw,18px);width:min(100%,560px);padding:4px;border-radius:999px;background:rgba(255,255,255,.48);border:1px solid var(--line-soft);box-shadow:var(--shadow);backdrop-filter:saturate(180%) blur(var(--blur));-webkit-backdrop-filter:saturate(180%) blur(var(--blur));flex-wrap:wrap}
+.tab{flex:1 1 auto;border:0;background:transparent;color:var(--text-3);border-radius:999px;padding:10px 12px;cursor:pointer;font-size:clamp(12px,2.6vw,14px);font-weight:600;white-space:nowrap;transition:all .16s ease;min-width:88px}
+.tab.on{background:rgba(255,255,255,.94);color:#0f172a;box-shadow:0 2px 10px rgba(15,23,42,.08)}
+.panel{display:none}.panel.on{display:block}
+.box{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:clamp(14px,2.8vw,20px);margin-bottom:12px;box-shadow:var(--shadow);backdrop-filter:saturate(180%) blur(var(--blur));-webkit-backdrop-filter:saturate(180%) blur(var(--blur))}
+label{display:block;font-size:13px;color:var(--text-3);margin-bottom:8px;font-weight:600}
+input,textarea,.result-box,.diff-view{width:100%;background:var(--field);color:var(--text);border:1px solid var(--line);border-radius:var(--radius-sm);padding:13px 14px;font:inherit;outline:none;transition:border-color .15s ease,box-shadow .15s ease,background .15s ease;box-shadow:inset 0 1px 1px rgba(15,23,42,.03)}
+input{font-size:15px;min-height:48px}
+input:focus,textarea:focus,.result-box:focus{border-color:rgba(10,132,255,.55);box-shadow:0 0 0 4px rgba(10,132,255,.12);background:#fff}
+textarea,.result-box,.diff-view{min-height:140px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Courier New",monospace;font-size:13px;line-height:1.55;color:var(--text-2)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.opts{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.opt{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text-2);background:rgba(255,255,255,.5);border:1px solid var(--line);border-radius:999px;padding:8px 12px;user-select:none}
+.opt input{width:auto;min-height:auto;margin:0}
+button{border:0;border-radius:980px;padding:11px 16px;font-weight:600;cursor:pointer;font-size:14px;transition:transform .12s ease,opacity .12s ease,background .12s ease;min-height:42px}
+button:active{transform:scale(.98)}
+button:disabled{opacity:.42;cursor:not-allowed}
+.bp{background:var(--blue);color:#fff;box-shadow:0 8px 18px rgba(10,132,255,.24)}
+.bp:hover{background:var(--blue-press)}
+.bs{background:rgba(255,255,255,.72);color:var(--text);border:1px solid var(--line)}
+.bs:hover{background:#fff}
+.meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.pill{background:rgba(255,255,255,.58);border:1px solid rgba(255,255,255,.66);border-radius:14px;padding:11px 10px;font-size:13px;min-width:0;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.pill b{display:block;color:var(--text-3);font-weight:600;margin-bottom:4px;font-size:11px}
+.pill span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-2);font-weight:500}
+.ok{color:var(--green)!important;font-weight:700}
+.err{color:var(--red)!important;font-weight:700}
+.ft{text-align:center;color:var(--text-3);font-size:12px;margin-top:18px}
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.chip{border:1px solid var(--line);background:var(--chip);color:var(--text);border-radius:999px;padding:8px 13px;font-size:13px;font-weight:600;cursor:pointer;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:all .15s ease}
+.chip:hover{background:#fff;border-color:rgba(10,132,255,.22)}
+.chip.active{background:rgba(10,132,255,.12);border-color:rgba(10,132,255,.32);color:#0071e3}
+.stack{display:flex;flex-direction:column;gap:12px}
+.compare-grid{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:860px){.compare-grid{grid-template-columns:1fr 1fr}}
+.result-wrap{user-select:text;-webkit-user-select:text}
+.result-box{display:block;min-height:min(48vh,360px);max-height:min(70vh,620px);overflow:auto;white-space:pre-wrap;word-break:break-word}
+.diff-view{min-height:180px;max-height:min(60vh,520px);overflow:auto;white-space:pre-wrap;word-break:break-word;background:rgba(255,255,255,.88)}
+.diff-view .add{background:rgba(48,209,88,.18);color:#0b7a32}
+.diff-view .del{background:rgba(255,69,58,.16);color:#b42318;text-decoration:line-through}
+.diff-view .chg{background:rgba(255,159,10,.18);color:#9a5b00}
+.diff-view .same{color:var(--text-2)}
+.diff-view .line-num{display:inline-block;min-width:2.2em;color:var(--text-3);margin-right:.5em;user-select:none}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--text-3)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:middle}
+.legend .l-add{background:rgba(48,209,88,.5)}
+.legend .l-del{background:rgba(255,69,58,.45)}
+.legend .l-chg{background:rgba(255,159,10,.5)}
+body.noselect-outside :not(.result-wrap):not(.result-wrap *){user-select:none;-webkit-user-select:none}
+@media(max-width:720px){
+  .meta{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .row .bp,.row .bs{flex:1 1 calc(50% - 8px)}
+  .presets .chip{flex:1 1 calc(50% - 8px);text-align:center}
+  textarea,.result-box,.diff-view{min-height:150px;font-size:12.5px}
+  .tabs{width:100%}
+}
+@media(max-width:420px){
+  .row .bp,.row .bs{flex:1 1 100%}
+  .presets .chip{flex:1 1 100%}
+}
+
+/* content region color polish */
+label{
+  color:#6b7280 !important;
+  font-weight:650 !important;
+  letter-spacing:0.01em;
+}
+input, textarea{
+  color:#111827 !important;
+  caret-color:#0a84ff;
+}
+input::placeholder, textarea::placeholder{
+  color:#9ca3af !important;
+  opacity:1;
+}
+textarea, .result-box, .diff-view{
+  color:#1f2937 !important;
+  background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(248,250,252,0.9)) !important;
+  border-color: rgba(148,163,184,0.28) !important;
+  font-feature-settings: "liga" 0, "calt" 0;
+  tab-size: 2;
+}
+.result-box, #b64out, #cmpView, .diff-view{
+  color:#0f172a !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.96), rgba(241,245,249,0.92)) !important;
+  border: 1px solid rgba(100,116,139,0.18) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.75),
+    inset 0 0 0 1px rgba(255,255,255,0.25),
+    0 8px 24px rgba(15,23,42,0.04) !important;
+}
+.result-box:focus, textarea:focus{
+  color:#0b1220 !important;
+  background:#ffffff !important;
+}
+/* section title accent for output blocks */
+.box > label{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:#475569 !important;
+}
+.box > label::before{
+  content:"";
+  width:6px; height:6px; border-radius:50%;
+  background: linear-gradient(135deg, #0a84ff, #64d2ff);
+  box-shadow:0 0 0 3px rgba(10,132,255,0.12);
+  flex:0 0 auto;
+}
+.pill span{ color:#1f2937 !important; }
+.pill b{ color:#64748b !important; }
+.diff-view .same{ color:#334155 !important; }
+.diff-view .add{ background:rgba(16,185,129,.14) !important; color:#047857 !important; }
+.diff-view .del{ background:rgba(239,68,68,.12) !important; color:#b91c1c !important; }
+.diff-view .chg{ background:rgba(245,158,11,.16) !important; color:#b45309 !important; }
+.diff-view .line-num{ color:#94a3b8 !important; }
+
+
+/* CodeMirror MergeView polish */
+.CodeMirror{height:420px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;color:#0f172a;background:rgba(255,255,255,.94);border-radius:12px}
+.CodeMirror-merge,.CodeMirror-merge-2pane{border:0 !important;border-radius:14px;overflow:hidden}
+.CodeMirror-merge-pane{background:rgba(255,255,255,.92)}
+.CodeMirror-merge-gap{background:rgba(248,250,252,.95);border-left:1px solid rgba(148,163,184,.2);border-right:1px solid rgba(148,163,184,.2)}
+.CodeMirror-gutters{background:#f8fafc;border-right:1px solid rgba(148,163,184,.2)}
+.CodeMirror-linenumber{color:#94a3b8}
+.CodeMirror-merge-r-chunk{background:rgba(10,132,255,.08)}
+.CodeMirror-merge-r-chunk-start,.CodeMirror-merge-l-chunk-start{border-top:1px solid rgba(10,132,255,.25)}
+.CodeMirror-merge-r-chunk-end,.CodeMirror-merge-l-chunk-end{border-bottom:1px solid rgba(10,132,255,.25)}
+.CodeMirror-merge-r-inserted{background:rgba(48,209,88,.18)}
+.CodeMirror-merge-r-deleted,.CodeMirror-merge-l-deleted{background:rgba(255,69,58,.14)}
+#mergeView{min-height:420px;border:1px solid rgba(100,116,139,.16);border-radius:14px;overflow:hidden;background:rgba(255,255,255,.75);box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}
+.cmp-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.cmp-toolbar .file-btn{position:relative;overflow:hidden}
+.cmp-toolbar .file-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.cmp-enc{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#64748b;background:rgba(255,255,255,.6);border:1px solid rgba(60,60,67,.12);border-radius:999px;padding:6px 10px}
+.cmp-enc select{border:0;background:transparent;color:#1f2937;font:inherit;outline:none}
+.cmp-side-title{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;color:#64748b;font-size:13px;font-weight:600}
+@media(max-width:860px){
+  .CodeMirror{height:280px}
+  #mergeView{min-height:560px}
+  .CodeMirror-merge-2pane{flex-direction:column}
+  .CodeMirror-merge-pane,.CodeMirror-merge-gap{width:100% !important}
+  .CodeMirror-merge-gap{height:12px;border:0;border-top:1px solid rgba(148,163,184,.2);border-bottom:1px solid rgba(148,163,184,.2)}
+}
+
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="hero">
+    <h1>TVBox 接口解密</h1>
+    <div class="sub">内置常用接口，一键解密出明文； Base64 / 文本对比</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" id="tabDecrypt" type="button">TVBox 接口解密</button>
+    <button class="tab" id="tabB64" type="button">Base64</button>
+    <button class="tab" id="tabCmp" type="button">文本对比</button>
+  </div>
+
+  <div class="panel on" id="panelDecrypt">
+    <div class="box">
+      <label>接口 URL</label>
+      <input id="url" placeholder="http://xxx/配置接口" autofocus autocomplete="off" spellcheck="false"/>
+      <div class="presets">
+        <button class="chip" type="button" data-url="http://hb.小虎斑.site:25252/仅供测试">小虎斑点播</button>
+        <button class="chip" type="button" data-url="http://tvbox.王二小放牛娃.top">王二小点播</button>
+        <button class="chip" type="button" data-url="https://www.xn--rgv465a.top/pro.json">无界点播</button>
+      </div>
+      <div class="row">
+        <button class="bp" id="run">解密出明文</button>
+        <button class="bs" id="copy" disabled>复制明文</button>
+        <button class="bs" id="openRaw" disabled>纯文本视图</button>
+        <button class="bs" id="clear">清空</button>
+      </div>
+    </div>
+    <div class="box">
+      <div class="meta">
+        <div class="pill"><b>状态</b><span id="s1">等待输入</span></div>
+        <div class="pill"><b>模式</b><span id="s2">-</span></div>
+        <div class="pill"><b>算法</b><span id="s3">-</span></div>
+        <div class="pill"><b>密钥</b><span id="s4">-</span></div>
+        <div class="pill"><b>编码</b><span id="s5">-</span></div>
+        <div class="pill"><b>类型</b><span id="s6">-</span></div>
+      </div>
+    </div>
+    <div class="box">
+      <label>明文结果</label>
+      <div class="result-wrap" id="resultWrap">
+        <textarea id="out" class="result-box" readonly spellcheck="false">// 解密后的明文会显示在这里</textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panelB64">
+    <div class="box">
+      <div class="stack">
+        <div>
+          <label>输入内容</label>
+          <textarea id="b64in" placeholder="粘贴待 Base64 编码或解码的内容"></textarea>
+        </div>
+        <div>
+          <label>输出结果</label>
+          <textarea id="b64out" placeholder="结果会显示在这里" readonly></textarea>
+        </div>
+      </div>
+      <div class="row">
+        <button class="bp" id="b64enc" type="button">编码</button>
+        <button class="bp" id="b64dec" type="button">解码</button>
+        <button class="bs" id="b64swap" type="button">上下互换</button>
+        <button class="bs" id="b64copy" type="button">复制结果</button>
+        <button class="bs" id="b64clear" type="button">清空</button>
+      </div>
+      <div style="margin-top:12px" class="pill"><b>状态</b><span id="b64st">等待输入</span></div>
+    </div>
+  </div>
+
+  
+  <div class="panel" id="panelCmp">
+    <div class="box">
+      <div class="cmp-toolbar">
+        <label class="bs file-btn" style="display:inline-flex;align-items:center;padding:10px 14px;border-radius:980px;border:1px solid rgba(60,60,67,.12);background:rgba(255,255,255,.72);cursor:pointer;font-weight:600;font-size:14px">
+          打开文件（左侧文本）
+          <input id="leftFile" type="file"/>
+        </label>
+        <label class="cmp-enc">编码
+          <select id="leftEncoding">
+            <option value="UTF-8">UTF-8</option>
+            <option value="GBK">GBK</option>
+            <option value="GB2312">GB2312</option>
+            <option value="GB18030">GB18030</option>
+            <option value="ISO-8859-1">ISO-8859-1</option>
+          </select>
+        </label>
+        <label class="bs file-btn" style="display:inline-flex;align-items:center;padding:10px 14px;border-radius:980px;border:1px solid rgba(60,60,67,.12);background:rgba(255,255,255,.72);cursor:pointer;font-weight:600;font-size:14px">
+          打开文件（右侧文本）
+          <input id="rightFile" type="file"/>
+        </label>
+        <label class="cmp-enc">编码
+          <select id="rightEncoding">
+            <option value="UTF-8">UTF-8</option>
+            <option value="GBK">GBK</option>
+            <option value="GB2312">GB2312</option>
+            <option value="GB18030">GB18030</option>
+            <option value="ISO-8859-1">ISO-8859-1</option>
+          </select>
+        </label>
+        <button class="bs" id="cmpSwap" type="button">交换</button>
+        <button class="bs" id="cmpClear" type="button">清空</button>
+      </div>
+      <div class="cmp-side-title">
+        <span>左侧文本 / 右侧文本</span>
+        <span style="font-weight:500;color:#94a3b8;font-size:12px">左右对比，自动高亮差异行；支持导入文件与交换两侧</span>
+      </div>
+      <div id="mergeView"></div>
+      <div style="margin-top:12px" class="pill"><b>状态</b><span id="cmpSt">等待输入</span></div>
+    </div>
+  </div>
+
+  <div class="ft">TVBox 接口解密</div>
+</div>
+
 <script>
-var last="";
-function sm(o){["s1","s2","s3","s4","s5","s6"].forEach(function(x,i){var e=document.getElementById(x),v=[o.st,o.m,o.a,o.k,o.e,o.sc][i];e.textContent=v!=null?v:"-";if(i===0)e.className=o.ok===true?"ok":o.ok===false?"err":""})}
-document.getElementById("btnRun").onclick=async function(){
-var btn=this;btn.disabled=true;sm({st:"解密中..."});
-try{var url=document.getElementById("inpUrl").value.trim();
-var content=document.getElementById("inp").value;
-var keys=document.getElementById("keys").value.trim();
-var body={};
-if(url){body.url=url;}
-else if(content.trim()){body.content=content;}
-else{sm({st:"请输入 URL 或粘贴内容",ok:false});return}
-if(keys){try{body.keys=JSON.parse(keys)}catch(e){body.keys=keys.split("\n").filter(function(x){return x.trim()}).map(function(x){return{name:"custom",key:x.trim(),keySize:16,algs:["aes-128-cbc","aes-128-ecb"]}})}}
-var res;try{res=await fetch("/api/decrypt",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})}catch(e){document.getElementById("out").textContent="网络错误: 无法连接后端服务。请确保 node server.js 正在运行。\n\n"+e.message;sm({st:"连接失败",ok:false});return}
-var j;try{j=await res.json()}catch(e){var raw=await res.text();document.getElementById("out").textContent="服务器返回非 JSON:\n"+raw.slice(0,500);sm({st:"服务器错误",ok:false});return}
-var txt=j.pureResult||j.error||JSON.stringify(j,null,2);
-document.getElementById("out").textContent=txt;last=txt;
-document.getElementById("btnCopy").disabled=!txt;
-sm({st:j.ok?"成功":(j.error||"未完全识别"),ok:!!j.ok,m:j.mode||"-",a:j.algorithm||"-",k:j.keyName||"-",e:j.encoding||"-",sc:j.score||0})
-}catch(e){document.getElementById("out").textContent="错误: "+e.message;sm({st:"错误",ok:false})}finally{btn.disabled=false}}
-document.getElementById("btnClear").onclick=function(){document.getElementById("inp").value="";document.getElementById("inpUrl").value="";document.getElementById("out").textContent="// 结果会显示在这里";last="";document.getElementById("btnCopy").disabled=true;sm({st:"等待输入"})}
-document.getElementById("btnCopy").onclick=function(){if(navigator.clipboard)navigator.clipboard.writeText(last).then(function(){alert("已复制")});else prompt("手动复制:",last)}
-</script></body></html>
+var last = "";
+var presets = document.querySelectorAll(".chip");
+function setMeta(o){
+  var ids=["s1","s2","s3","s4","s5","s6"];
+  var vals=[o.st,o.m,o.a,o.k,o.e,o.ck];
+  ids.forEach(function(id,i){
+    var el=document.getElementById(id);
+    el.textContent=vals[i]!=null&&vals[i]!==""?vals[i]:"-";
+    if(id==="s1") el.className=o.ok===true?"ok":(o.ok===false?"err":"");
+  });
+}
+function setActiveChip(url){
+  presets.forEach(function(btn){
+    if(btn.getAttribute("data-url")===url) btn.classList.add("active");
+    else btn.classList.remove("active");
+  });
+}
+presets.forEach(function(btn){
+  btn.addEventListener("click", function(){
+    var u=btn.getAttribute("data-url")||"";
+    document.getElementById("url").value=u;
+    setActiveChip(u);
+    run();
+  });
+});
+async function run(){
+  var btn=document.getElementById("run");
+  btn.disabled=true;
+  setMeta({st:"抓取解密中..."});
+  try{
+    var url=document.getElementById("url").value.trim();
+    if(!url){ setMeta({st:"请输入 URL",ok:false}); return; }
+    setActiveChip(url);
+    var res=await fetch("/api/decrypt",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url:url})});
+    var j=await res.json();
+    var text=(j.pureResult!=null&&j.pureResult!=="")?j.pureResult:(j.error||"无结果");
+    document.getElementById("out").value=text;
+    last=text;
+    document.getElementById("copy").disabled=!text;
+    document.getElementById("openRaw").disabled=!url;
+    setMeta({st:j.ok?"成功":(j.error||"未完全解密"),ok:!!j.ok,m:j.mode||"-",a:j.algorithm||"-",k:j.keyName||"-",e:j.encoding||"-",ck:j.contentKind||"-"});
+  }catch(e){
+    document.getElementById("out").value="错误: "+e.message;
+    setMeta({st:"错误",ok:false});
+  }finally{ btn.disabled=false; }
+}
+document.getElementById("run").onclick=run;
+document.getElementById("url").addEventListener("keydown",function(e){ if(e.key==="Enter") run(); });
+document.getElementById("copy").onclick=function(){
+  if(navigator.clipboard) navigator.clipboard.writeText(last).then(function(){ alert("明文已复制"); });
+  else prompt("复制明文:", last);
+};
+document.getElementById("openRaw").onclick=function(){
+  var url=document.getElementById("url").value.trim();
+  if(!url) return;
+  window.open("/api/raw?url="+encodeURIComponent(url),"_blank");
+};
+document.getElementById("clear").onclick=function(){
+  document.getElementById("url").value="";
+  document.getElementById("out").value="// 解密后的明文会显示在这里";
+  last="";
+  document.getElementById("copy").disabled=true;
+  document.getElementById("openRaw").disabled=true;
+  setActiveChip("");
+  setMeta({st:"等待输入"});
+};
+
+// old showPanel removed
+
+
+function setB64Status(text, ok){
+  var el=document.getElementById("b64st");
+  el.textContent=text;
+  el.className=ok===true?"ok":(ok===false?"err":"");
+}
+function utf8ToB64(str){
+  var bytes=new TextEncoder().encode(str);
+  var bin=""; for(var i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+function b64ToUtf8(b64){
+  var clean=String(b64||"").replace(/\s+/g,"").replace(/-/g,"+").replace(/_/g,"/");
+  while(clean.length%4) clean+="=";
+  var bin=atob(clean);
+  var bytes=new Uint8Array(bin.length);
+  for(var i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+  return new TextDecoder("utf-8",{fatal:false}).decode(bytes);
+}
+document.getElementById("b64enc").onclick=function(){
+  try{ document.getElementById("b64out").value=utf8ToB64(document.getElementById("b64in").value); setB64Status("编码成功",true); }
+  catch(e){ setB64Status("错误: "+e.message,false); }
+};
+document.getElementById("b64dec").onclick=function(){
+  try{ document.getElementById("b64out").value=b64ToUtf8(document.getElementById("b64in").value); setB64Status("解码成功",true); }
+  catch(e){ setB64Status("Base64 解码失败",false); }
+};
+document.getElementById("b64swap").onclick=function(){
+  var a=document.getElementById("b64in"), b=document.getElementById("b64out"), t=a.value; a.value=b.value; b.value=t;
+};
+document.getElementById("b64copy").onclick=function(){
+  var v=document.getElementById("b64out").value; if(!v) return;
+  if(navigator.clipboard) navigator.clipboard.writeText(v).then(function(){ alert("明文已复制"); });
+  else prompt("复制明文:", v);
+};
+document.getElementById("b64clear").onclick=function(){
+  document.getElementById("b64in").value=""; document.getElementById("b64out").value=""; setB64Status("等待输入");
+};
+
+
+
+
+// ===== Text Compare (CodeMirror MergeView, toolhelper-style) =====
+var codeMirrorView = null;
+var CMP_PLACEHOLDER = "请输入文本";
+function setCmpStatus(text, ok){
+  var el = document.getElementById("cmpSt");
+  if(!el) return;
+  el.textContent = text;
+  el.className = ok===true ? "ok" : (ok===false ? "err" : "");
+}
+function ensureMergeView(){
+  if (codeMirrorView) return codeMirrorView;
+  if (typeof CodeMirror === "undefined" || !CodeMirror.MergeView) {
+    setCmpStatus("CodeMirror 加载失败，请检查网络", false);
+    return null;
+  }
+  var host = document.getElementById("mergeView");
+  if (!host) return null;
+  host.innerHTML = "";
+  var isMobile = window.matchMedia("(max-width: 860px)").matches;
+  codeMirrorView = CodeMirror.MergeView(host, {
+    value: "",
+    orig: "",
+    lineNumbers: true,
+    mode: null,
+    highlightDifferences: true,
+    connect: isMobile ? false : "align",
+    collapseIdentical: false,
+    allowEditingOriginals: true,
+    revertButtons: true,
+    showDifferences: true,
+    placeholder: CMP_PLACEHOLDER
+  });
+  try {
+    // placeholders for both panes
+    if (codeMirrorView.editor()) codeMirrorView.editor().setOption("placeholder", CMP_PLACEHOLDER);
+    if (codeMirrorView.rightOriginal()) codeMirrorView.rightOriginal().setOption("placeholder", CMP_PLACEHOLDER);
+  } catch (e) {}
+  function onChange(){
+    try {
+      var a = codeMirrorView.editor().getValue();
+      var b = codeMirrorView.rightOriginal().getValue();
+      if (!a && !b) setCmpStatus("等待输入");
+      else if (a === b) setCmpStatus("两侧文本相同", true);
+      else setCmpStatus("已高亮差异", true);
+    } catch (e) {}
+  }
+  codeMirrorView.editor().on("change", onChange);
+  codeMirrorView.rightOriginal().on("change", onChange);
+  setTimeout(function(){
+    try {
+      codeMirrorView.editor().refresh();
+      codeMirrorView.rightOriginal().refresh();
+    } catch (e) {}
+  }, 50);
+  setCmpStatus("已就绪", true);
+  return codeMirrorView;
+}
+function cmpSwap(){
+  var v = ensureMergeView(); if(!v) return;
+  var a = v.editor().getValue();
+  var b = v.rightOriginal().getValue();
+  v.editor().setValue(b);
+  v.rightOriginal().setValue(a);
+}
+function cmpClear(){
+  var v = ensureMergeView(); if(!v) return;
+  v.editor().setValue("");
+  v.rightOriginal().setValue("");
+  setCmpStatus("等待输入");
+}
+function readFileToPane(fileInput, which){
+  var files = fileInput.files; if(!files || !files.length) return;
+  var encSel = document.getElementById(which === "left" ? "leftEncoding" : "rightEncoding");
+  var enc = (encSel && encSel.value) || "UTF-8";
+  var reader = new FileReader();
+  reader.onload = function(){
+    var v = ensureMergeView(); if(!v) return;
+    var text = String(this.result || "");
+    if (which === "left") v.editor().setValue(text);
+    else v.rightOriginal().setValue(text);
+  };
+  // FileReader supports utf-8 well; for gbk use decode fallback via array buffer when needed
+  if (/^UTF-?8$/i.test(enc)) {
+    reader.readAsText(files[0], "UTF-8");
+  } else {
+    var fr = new FileReader();
+    fr.onload = function(){
+      try {
+        var buf = fr.result;
+        var text = new TextDecoder(enc).decode(buf);
+        var v = ensureMergeView(); if(!v) return;
+        if (which === "left") v.editor().setValue(text);
+        else v.rightOriginal().setValue(text);
+      } catch (e) {
+        // fallback utf-8
+        reader.readAsText(files[0], "UTF-8");
+      }
+    };
+    fr.readAsArrayBuffer(files[0]);
+  }
+}
+document.getElementById("cmpSwap").onclick = cmpSwap;
+document.getElementById("cmpClear").onclick = cmpClear;
+document.getElementById("leftFile").addEventListener("change", function(){ readFileToPane(this, "left"); });
+document.getElementById("rightFile").addEventListener("change", function(){ readFileToPane(this, "right"); });
+
+// override showPanel to init merge view when opening compare tab
+var _oldShowPanel = typeof showPanel === "function" ? showPanel : null;
+showPanel = function(name){
+  document.getElementById("panelDecrypt").className = name==="decrypt"?"panel on":"panel";
+  document.getElementById("panelB64").className = name==="b64"?"panel on":"panel";
+  document.getElementById("panelCmp").className = name==="cmp"?"panel on":"panel";
+  document.getElementById("tabDecrypt").className = name==="decrypt"?"tab on":"tab";
+  document.getElementById("tabB64").className = name==="b64"?"tab on":"tab";
+  document.getElementById("tabCmp").className = name==="cmp"?"tab on":"tab";
+  if (name === "cmp") {
+    setTimeout(function(){
+      var v = ensureMergeView();
+      if (v) {
+        try { v.editor().refresh(); v.rightOriginal().refresh(); } catch(e) {}
+      }
+    }, 30);
+  }
+};
+document.getElementById("tabDecrypt").onclick=function(){ showPanel("decrypt"); };
+document.getElementById("tabB64").onclick=function(){ showPanel("b64"); };
+document.getElementById("tabCmp").onclick=function(){ showPanel("cmp"); };
+
+function selectResultOnly(){
+  var el=document.getElementById("out"); if(!el) return;
+  el.focus(); el.select();
+  try{ el.setSelectionRange(0, el.value.length); }catch(e){}
+}
+(function(){
+  var wrap=document.getElementById("resultWrap"), out=document.getElementById("out");
+  if(!wrap||!out) return;
+  wrap.addEventListener("mousedown", function(){ document.body.classList.add("noselect-outside"); });
+  document.addEventListener("mouseup", function(){ document.body.classList.remove("noselect-outside"); });
+  out.addEventListener("keydown", function(e){
+    if((e.ctrlKey||e.metaKey)&&(e.key==="a"||e.key==="A")){ e.preventDefault(); e.stopPropagation(); selectResultOnly(); }
+  });
+  document.addEventListener("keydown", function(e){
+    if(!((e.ctrlKey||e.metaKey)&&(e.key==="a"||e.key==="A"))) return;
+    var ae=document.activeElement;
+    if(ae===out||(wrap&&wrap.contains(ae))){ e.preventDefault(); selectResultOnly(); }
+  }, true);
+  wrap.addEventListener("click", function(){ out.focus(); });
+})();
+</script>
+</body>
+</html>
