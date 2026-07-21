@@ -1,0 +1,68 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>TVBox 接口解密工具</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0a0e14;color:#dce6f0;font-family:-apple-system,Segoe UI,PingFang SC,Microsoft YaHei,sans-serif;padding:20px 16px 60px;max-width:1000px;margin:0 auto}
+h1{font-size:24px;margin:0 0 4px}.sub{color:#7a93b0;font-size:13px;line-height:1.6;margin-bottom:18px}
+.box{background:#141b26;border:1px solid #1f2d42;border-radius:10px;padding:16px;margin-bottom:14px}
+label{display:block;font-size:13px;color:#7a93b0;margin-bottom:6px}
+textarea,input{width:100%;background:#0d1520;color:#dce6f0;border:1px solid #1f2d42;border-radius:8px;padding:10px 12px;font:inherit;outline:none}
+textarea:focus,input:focus{border-color:#36c9b8}
+textarea{min-height:120px;resize:vertical;font-family:ui-monospace,Consolas,monospace;font-size:13px}
+.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+button{border:0;border-radius:8px;padding:10px 18px;font-weight:600;cursor:pointer;font-size:14px}
+button:disabled{opacity:.45}.bp{background:linear-gradient(135deg,#36c9b8,#5c9cfe);color:#031015}.bs{background:#1c2a3d;color:#dce6f0}
+.pill{background:#0d1520;border:1px solid #1f2d42;border-radius:8px;padding:10px;font-size:13px}
+.pill b{display:block;color:#7a93b0;font-weight:500;margin-bottom:4px;font-size:12px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+pre{white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,Consolas,monospace;font-size:12.5px;max-height:500px;overflow:auto;margin:0}
+.ok{color:#2dd4a0}.err{color:#f06}small{color:#637a94;font-size:12px;display:block;margin-top:4px}
+.ft{text-align:center;color:#637a94;font-size:12px;margin-top:20px}
+.hint{background:#1a2740;border:1px solid #1f2d42;border-radius:6px;padding:10px 14px;font-size:12px;color:#7a93b0;line-height:1.6;margin-bottom:14px}
+</style></head><body>
+<h1>TVBox 接口解密工具</h1>
+<div class="sub">输入 URL 自动抓取解密，或粘贴密文手动解密。内置 41 组公开密钥，支持 AES/DES/3DES/XOR。</div>
+<div class="hint"><b>提示：</b>URL 必须直接返回 TVBox JSON 配置或加密内容。如果 URL 返回的是网页，请找配置接口的真实地址（通常带 /tvbox.json、/api.php?url= 等路径）。</div>
+<div class="box">
+<label>配置接口地址（输入 URL 自动抓取并解密）</label>
+<input id="inpUrl" placeholder="http://example.com/tvbox.json 或 http://xxx/api.php?url=xxx"/>
+<div style="height:10px"></div>
+<label>或粘贴明文 / 密文 / hex / base64（不填 URL 则走本地解密）</label>
+<textarea id="inp" placeholder="粘贴 TVBox 配置内容..."></textarea>
+<div style="height:10px"></div>
+<label>自定义密钥（可选，JSON 数组或每行一个 key）</label>
+<textarea id="keys" style="min-height:50px;font-size:12px" placeholder='[{"name":"my","key":"16byteslength!!","iv":"16byteslength!!","keySize":16,"algs":["aes-128-cbc"]}]'></textarea>
+<div class="btns"><button class="bp" id="btnRun">解密</button><button class="bs" id="btnCopy" disabled>复制结果</button><button class="bs" id="btnClear">清空</button></div></div>
+<div class="box"><div class="meta">
+<div class="pill"><b>状态</b><span id="s1">等待输入</span></div>
+<div class="pill"><b>模式</b><span id="s2">-</span></div>
+<div class="pill"><b>算法</b><span id="s3">-</span></div>
+<div class="pill"><b>密钥</b><span id="s4">-</span></div>
+<div class="pill"><b>编码</b><span id="s5">-</span></div>
+<div class="pill"><b>评分</b><span id="s6">-</span></div>
+</div></div>
+<div class="box"><label>解密结果</label><pre id="out">// 结果会显示在这里</pre></div>
+<div class="ft">TVBox 接口解密工具 v2.0 | 41 组内置密钥 | AES/DES/3DES/XOR | 远程 URL 解密</div>
+<script>
+var last="";
+function sm(o){["s1","s2","s3","s4","s5","s6"].forEach(function(x,i){var e=document.getElementById(x),v=[o.st,o.m,o.a,o.k,o.e,o.sc][i];e.textContent=v!=null?v:"-";if(i===0)e.className=o.ok===true?"ok":o.ok===false?"err":""})}
+document.getElementById("btnRun").onclick=async function(){
+var btn=this;btn.disabled=true;sm({st:"解密中..."});
+try{var url=document.getElementById("inpUrl").value.trim();
+var content=document.getElementById("inp").value;
+var keys=document.getElementById("keys").value.trim();
+var body={};
+if(url){body.url=url;}
+else if(content.trim()){body.content=content;}
+else{sm({st:"请输入 URL 或粘贴内容",ok:false});return}
+if(keys){try{body.keys=JSON.parse(keys)}catch(e){body.keys=keys.split("\n").filter(function(x){return x.trim()}).map(function(x){return{name:"custom",key:x.trim(),keySize:16,algs:["aes-128-cbc","aes-128-ecb"]}})}}
+var res;try{res=await fetch("/api/decrypt",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})}catch(e){document.getElementById("out").textContent="网络错误: 无法连接后端服务。请确保 node server.js 正在运行。\n\n"+e.message;sm({st:"连接失败",ok:false});return}
+var j;try{j=await res.json()}catch(e){var raw=await res.text();document.getElementById("out").textContent="服务器返回非 JSON:\n"+raw.slice(0,500);sm({st:"服务器错误",ok:false});return}
+var txt=j.pureResult||j.error||JSON.stringify(j,null,2);
+document.getElementById("out").textContent=txt;last=txt;
+document.getElementById("btnCopy").disabled=!txt;
+sm({st:j.ok?"成功":(j.error||"未完全识别"),ok:!!j.ok,m:j.mode||"-",a:j.algorithm||"-",k:j.keyName||"-",e:j.encoding||"-",sc:j.score||0})
+}catch(e){document.getElementById("out").textContent="错误: "+e.message;sm({st:"错误",ok:false})}finally{btn.disabled=false}}
+document.getElementById("btnClear").onclick=function(){document.getElementById("inp").value="";document.getElementById("inpUrl").value="";document.getElementById("out").textContent="// 结果会显示在这里";last="";document.getElementById("btnCopy").disabled=true;sm({st:"等待输入"})}
+document.getElementById("btnCopy").onclick=function(){if(navigator.clipboard)navigator.clipboard.writeText(last).then(function(){alert("已复制")});else prompt("手动复制:",last)}
+</script></body></html>
